@@ -1,0 +1,8 @@
+This directory contains placeholder for images.
+In a production version, you would include:
+- Memorial photo of Charlie Kirk
+- Video thumbnails
+- Social media sharing images
+- Background graphics
+
+For now, the website uses CDN links and will gracefully handle missing images.
