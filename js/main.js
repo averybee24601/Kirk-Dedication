@@ -36,10 +36,38 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Video URLs and link fixes
+    const REMOTE_VIDEO_URL = 'https://page.gensparksite.com/get_upload_url/80b534c179de8d2326ead76a1221adc99e98b8d6d47a379efffe76ea1916b99f/default/92171563-246f-41e2-aabd-8a5af196defb';
+    const LOCAL_VIDEO_URL = 'videos/msnbc_compilation_final.mp4';
+
+    // Fix Direct Link target based on device
+    const directLinkEl = document.getElementById('direct-link');
+    if (directLinkEl) {
+        directLinkEl.href = isMobile ? LOCAL_VIDEO_URL : REMOTE_VIDEO_URL;
+        directLinkEl.rel = 'noopener';
+        directLinkEl.target = '_blank';
+    }
+
+    // Clean up mobile-fallback text and link
+    const mobileFallback = document.querySelector('.mobile-fallback');
+    if (mobileFallback) {
+        const p = mobileFallback.querySelector('p');
+        if (p) {
+            p.textContent = "Mobile users: If the video doesn't load, use the Direct Link button below.";
+        }
+        const a = mobileFallback.querySelector('a');
+        if (a) {
+            a.href = LOCAL_VIDEO_URL;
+            a.textContent = 'Open Video in New Tab';
+            a.rel = 'noopener';
+            a.target = '_blank';
+        }
+    }
+
     // Enhanced video loading with mobile-specific optimizations
     if (mainVideo) {
-        // Set preload to auto for better thumbnail display
-        mainVideo.preload = 'auto';
+        // Prefer metadata on mobile for faster first paint
+        mainVideo.preload = isMobile ? 'metadata' : 'auto';
         
         // Force poster display as background
         if (mainVideo.poster) {
@@ -52,10 +80,12 @@ document.addEventListener('DOMContentLoaded', function() {
             mainVideo.setAttribute('webkit-playsinline', '');
         }
         
-        // Optimize video playback settings
+        // Optimize video playback settings (suppress noisy overlays on mobile)
         mainVideo.addEventListener('loadstart', function() {
             console.log('Loading compilation video');
-            showVideoStatus('Loading MSNBC evidence compilation...');
+            if (!isMobile) {
+                showVideoStatus('Loading MSNBC evidence compilation...');
+            }
         });
         
         mainVideo.addEventListener('loadedmetadata', function() {
@@ -73,18 +103,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        mainVideo.addEventListener('error', function() {
-            console.log('Video loading failed');
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            
-            if (mainVideo.error) {
-                console.log('Video error details:', mainVideo.error);
-                
-                if (isMobile) {
-                    // Mobile-specific error handling
-                    showVideoStatus('Video loading failed on mobile. Try using the Direct Link.');
-                } else {
-                    // Desktop error handling
+        // Desktop-only error recovery; mobile uses a simple fallback card
+        if (!isMobile) {
+            mainVideo.addEventListener('error', function() {
+                console.log('Video loading failed');
+                if (mainVideo.error) {
+                    console.log('Video error details:', mainVideo.error);
                     const sources = mainVideo.querySelectorAll('source');
                     if (sources.length > 1) {
                         // Remove the failed source and reload
@@ -95,8 +119,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         showVideoStatus('Click "Direct Link" or "Download" to access the video');
                     }
                 }
-            }
-        });
+            });
+        }
         
         mainVideo.addEventListener('canplay', function() {
             console.log('Compilation video ready to play');
@@ -110,7 +134,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         mainVideo.addEventListener('waiting', function() {
             console.log('Video buffering...');
-            showVideoStatus('Buffering video...');
+            if (!isMobile) {
+                showVideoStatus('Buffering video...');
+            }
         });
         
         mainVideo.addEventListener('playing', function() {
@@ -118,10 +144,12 @@ document.addEventListener('DOMContentLoaded', function() {
             hideVideoStatus();
         });
         
-        mainVideo.addEventListener('error', function(e) {
-            console.log('Video error:', e);
-            handleMobileVideoError(mainVideo);
-        });
+        if (isMobile) {
+            mainVideo.addEventListener('error', function(e) {
+                console.log('Video error:', e);
+                handleMobileVideoError(mainVideo);
+            });
+        }
         
         mainVideo.addEventListener('loadeddata', function() {
             console.log('Video data loaded');
@@ -153,10 +181,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         } else {
-            // Mobile-specific loading strategy
+            // Mobile-specific loading strategy: avoid overlays and heavy preloading
             mainVideo.addEventListener('click', function() {
                 if (mainVideo.readyState === 0) {
-                    showVideoStatus('Loading video...');
                     mainVideo.load();
                 }
             });
@@ -339,7 +366,8 @@ document.addEventListener('DOMContentLoaded', function() {
         timelineObserver.observe(item);
     });
     
-    // Video error handling
+    // Video error handling (desktop only)
+    if (!isMobile) {
     document.querySelectorAll('video').forEach(video => {
         video.addEventListener('error', function() {
             const errorMsg = document.createElement('div');
@@ -371,8 +399,10 @@ document.addEventListener('DOMContentLoaded', function() {
             errorMsgs.forEach(msg => msg.remove());
         });
     });
+    }
     
-    // Enhanced video loading with better error handling
+    // Enhanced video loading with better error handling (desktop only)
+    if (!isMobile) {
     document.querySelectorAll('video').forEach(video => {
         const loadingOverlay = document.createElement('div');
         loadingOverlay.className = 'video-loading';
@@ -434,6 +464,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Force load attempt
         video.load();
     });
+    }
     
     // Keyboard navigation
     document.addEventListener('keydown', function(e) {

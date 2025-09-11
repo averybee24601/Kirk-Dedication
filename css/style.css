@@ -1265,4 +1265,9 @@ html {
         background: none;
         color: black;
     }
+}/* Mobile cleanup: hide noisy overlays */
+@media (max-width: 768px) {
+  .video-status,
+  .video-loading,
+  .video-error { display: none !important; }
 }
