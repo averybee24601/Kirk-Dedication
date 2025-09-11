@@ -20,6 +20,32 @@ document.addEventListener('DOMContentLoaded', function() {
         directLinkEl.target = '_blank';
     }
 
+    // Reliable mobile download: fetch blob then trigger a save
+    const downloadEl = document.getElementById('download-video');
+    if (downloadEl) {
+        downloadEl.addEventListener('click', async function(e) {
+            try {
+                e.preventDefault();
+                const response = await fetch(LOCAL_VIDEO_URL, { cache: 'no-store' });
+                if (!response.ok) throw new Error('Network error');
+                const blob = await response.blob();
+                const objectUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = objectUrl;
+                a.download = 'MSNBC_Should_Lose_License_Evidence.mp4';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    URL.revokeObjectURL(objectUrl);
+                    a.remove();
+                }, 1000);
+            } catch (err) {
+                // As a last resort, open in a new tab where user can save
+                window.open(LOCAL_VIDEO_URL, '_blank');
+            }
+        });
+    }
+
     // Clean up mobile-fallback text and link (deduplicated)
     const mobileFallback = document.querySelector('.mobile-fallback');
     if (mobileFallback) {

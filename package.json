@@ -1,0 +1,26 @@
+{
+  "name": "kirk-dedication",
+  "version": "1.0.0",
+  "description": "This website documents MSNBC's irresponsible coverage of the Charlie Kirk assassination, exposing how they attacked the victim within minutes of his death instead of showing basic human decency.",
+  "main": "index.js",
+  "scripts": {
+    "start": "http-server -c-1 -p 8080 .",
+    "dev": "http-server -c-1 -p 8080 .",
+    "serve": "http-server -c-1 -p 8080 ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/averybee24601/Kirk-Dedication.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/averybee24601/Kirk-Dedication/issues"
+  },
+  "homepage": "https://github.com/averybee24601/Kirk-Dedication#readme",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
