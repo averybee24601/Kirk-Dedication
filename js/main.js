@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
     // Video URL used across the site
-    const LOCAL_VIDEO_URL = 'charlie kirk working video/f56830e5-22c2-4b3d-9dc2-e2c069934524 (2).mp4';
+    // Use URL-encoded path to ensure mobile browsers (iOS Safari) resolve correctly
+    const LOCAL_VIDEO_URL = 'charlie%20kirk%20working%20video/f56830e5-22c2-4b3d-9dc2-e2c069934524%20%282%29.mp4';
 
     // Fix Direct Link target
     const directLinkEl = document.getElementById('direct-link');
@@ -109,12 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
             hideVideoStatus();
         });
         
-        if (isMobile) {
-            mainVideo.addEventListener('error', function(e) {
-                console.log('Video error:', e);
-                handleMobileVideoError(mainVideo);
-            });
-        }
+        // iOS often blocks autoplay and certain stream loads; we avoid custom handlers
         
         mainVideo.addEventListener('loadeddata', function() {
             console.log('Video data loaded');
@@ -662,49 +658,4 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// Override mobile error handler with a clean, mobile-friendly version
-function handleMobileVideoError(video) {
-    try {
-        const container = video && video.parentNode ? video.parentNode : document.body;
-        if (!container || container.querySelector('.mobile-video-error')) return;
-
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'mobile-video-error';
-        errorDiv.style.background = 'rgba(255, 107, 107, 0.1)';
-        errorDiv.style.border = '2px solid #ff6b6b';
-        errorDiv.style.padding = '20px';
-        errorDiv.style.borderRadius = '15px';
-        errorDiv.style.textAlign = 'center';
-        errorDiv.style.margin = '15px 0';
-        errorDiv.style.color = '#ff6b6b';
-
-        const title = document.createElement('h4');
-        title.style.marginBottom = '10px';
-        title.textContent = 'Mobile Video Issue';
-
-        const msg = document.createElement('p');
-        msg.style.marginBottom = '15px';
-        msg.textContent = 'Use the "Direct Link" below to view the video in your browser or download it.';
-
-        const link = document.createElement('a');
-        link.href = 'charlie kirk working video/f56830e5-22c2-4b3d-9dc2-e2c069934524 (2).mp4';
-        link.target = '_blank';
-        link.rel = 'noopener';
-        link.textContent = 'Open Video in New Tab';
-        link.style.background = '#ff6b6b';
-        link.style.color = 'white';
-        link.style.padding = '12px 20px';
-        link.style.borderRadius = '8px';
-        link.style.textDecoration = 'none';
-        link.style.display = 'inline-block';
-        link.style.fontWeight = 'bold';
-
-        errorDiv.appendChild(title);
-        errorDiv.appendChild(msg);
-        errorDiv.appendChild(link);
-
-        container.insertBefore(errorDiv, video ? video.nextSibling : null);
-    } catch (e) {
-        console.log('Failed to render mobile error UI', e);
-    }
-}
+// Removed custom mobile error UI to avoid interference on iOS
