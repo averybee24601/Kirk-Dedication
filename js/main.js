@@ -8,6 +8,34 @@ document.addEventListener('DOMContentLoaded', function() {
     // Mobile device detection
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
+    // Video URLs and link fixes
+    const REMOTE_VIDEO_URL = 'https://page.gensparksite.com/get_upload_url/80b534c179de8d2326ead76a1221adc99e98b8d6d47a379efffe76ea1916b99f/default/92171563-246f-41e2-aabd-8a5af196defb';
+    const LOCAL_VIDEO_URL = 'videos/msnbc_compilation_final.mp4';
+
+    // Fix Direct Link target based on device
+    const directLinkEl = document.getElementById('direct-link');
+    if (directLinkEl) {
+        directLinkEl.href = isMobile ? LOCAL_VIDEO_URL : REMOTE_VIDEO_URL;
+        directLinkEl.rel = 'noopener';
+        directLinkEl.target = '_blank';
+    }
+
+    // Clean up mobile-fallback text and link
+    const mobileFallback = document.querySelector('.mobile-fallback');
+    if (mobileFallback) {
+        const p = mobileFallback.querySelector('p');
+        if (p) {
+            p.textContent = "Mobile users: If the video doesn't load, use the Direct Link button below.";
+        }
+        const a = mobileFallback.querySelector('a');
+        if (a) {
+            a.href = LOCAL_VIDEO_URL;
+            a.textContent = 'Open Video in New Tab';
+            a.rel = 'noopener';
+            a.target = '_blank';
+        }
+    }
+
     // Enhanced video loading with mobile-specific optimizations
     if (mainVideo) {
         // Set preload to auto for better thumbnail display
@@ -649,4 +677,51 @@ if ('serviceWorker' in navigator) {
                 console.log('ServiceWorker registration failed');
             });
     });
+}
+
+// Override mobile error handler with a clean, mobile-friendly version
+function handleMobileVideoError(video) {
+    try {
+        const container = video && video.parentNode ? video.parentNode : document.body;
+        if (!container || container.querySelector('.mobile-video-error')) return;
+
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'mobile-video-error';
+        errorDiv.style.background = 'rgba(255, 107, 107, 0.1)';
+        errorDiv.style.border = '2px solid #ff6b6b';
+        errorDiv.style.padding = '20px';
+        errorDiv.style.borderRadius = '15px';
+        errorDiv.style.textAlign = 'center';
+        errorDiv.style.margin = '15px 0';
+        errorDiv.style.color = '#ff6b6b';
+
+        const title = document.createElement('h4');
+        title.style.marginBottom = '10px';
+        title.textContent = 'Mobile Video Issue';
+
+        const msg = document.createElement('p');
+        msg.style.marginBottom = '15px';
+        msg.textContent = 'Use the "Direct Link" below to view the video in your browser or download it.';
+
+        const link = document.createElement('a');
+        link.href = 'videos/msnbc_compilation_final.mp4';
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.textContent = 'Open Video in New Tab';
+        link.style.background = '#ff6b6b';
+        link.style.color = 'white';
+        link.style.padding = '12px 20px';
+        link.style.borderRadius = '8px';
+        link.style.textDecoration = 'none';
+        link.style.display = 'inline-block';
+        link.style.fontWeight = 'bold';
+
+        errorDiv.appendChild(title);
+        errorDiv.appendChild(msg);
+        errorDiv.appendChild(link);
+
+        container.insertBefore(errorDiv, video ? video.nextSibling : null);
+    } catch (e) {
+        console.log('Failed to render mobile error UI', e);
+    }
 }
