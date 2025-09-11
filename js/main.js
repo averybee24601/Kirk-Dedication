@@ -8,14 +8,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Mobile device detection
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
-    // Video URLs and link fixes
-    const REMOTE_VIDEO_URL = 'https://page.gensparksite.com/get_upload_url/80b534c179de8d2326ead76a1221adc99e98b8d6d47a379efffe76ea1916b99f/default/92171563-246f-41e2-aabd-8a5af196defb';
-    const LOCAL_VIDEO_URL = 'videos/msnbc_compilation_final.mp4';
+    // Video URL used across the site
+    const LOCAL_VIDEO_URL = 'charlie kirk working video/f56830e5-22c2-4b3d-9dc2-e2c069934524 (2).mp4';
 
-    // Fix Direct Link target based on device
+    // Fix Direct Link target
     const directLinkEl = document.getElementById('direct-link');
     if (directLinkEl) {
-        directLinkEl.href = isMobile ? LOCAL_VIDEO_URL : REMOTE_VIDEO_URL;
+        directLinkEl.href = LOCAL_VIDEO_URL;
         directLinkEl.rel = 'noopener';
         directLinkEl.target = '_blank';
     }
@@ -34,18 +33,6 @@ document.addEventListener('DOMContentLoaded', function() {
             a.rel = 'noopener';
             a.target = '_blank';
         }
-    }
-
-    // Video URLs and link fixes
-    const REMOTE_VIDEO_URL = 'https://page.gensparksite.com/get_upload_url/80b534c179de8d2326ead76a1221adc99e98b8d6d47a379efffe76ea1916b99f/default/92171563-246f-41e2-aabd-8a5af196defb';
-    const LOCAL_VIDEO_URL = 'videos/msnbc_compilation_final.mp4';
-
-    // Fix Direct Link target based on device
-    const directLinkEl = document.getElementById('direct-link');
-    if (directLinkEl) {
-        directLinkEl.href = isMobile ? LOCAL_VIDEO_URL : REMOTE_VIDEO_URL;
-        directLinkEl.rel = 'noopener';
-        directLinkEl.target = '_blank';
     }
 
     // Clean up mobile-fallback text and link
@@ -66,8 +53,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Enhanced video loading with mobile-specific optimizations
     if (mainVideo) {
-        // Prefer metadata on mobile for faster first paint
-        mainVideo.preload = isMobile ? 'metadata' : 'auto';
+        // Ensure the browser aggressively fetches the video on all devices
+        mainVideo.preload = 'auto';
         
         // Force poster display as background
         if (mainVideo.poster) {
@@ -169,25 +156,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             });
-            
-            // Desktop: Force immediate load
-            mainVideo.load();
-            
-            // Preload a few seconds to prevent initial lag
-            mainVideo.addEventListener('loadedmetadata', function() {
-                if (mainVideo.readyState >= 2) { // HAVE_CURRENT_DATA or higher
-                    mainVideo.currentTime = 0.1; // Preload first frame
-                    mainVideo.currentTime = 0;
-                }
-            });
-        } else {
-            // Mobile-specific loading strategy: avoid overlays and heavy preloading
-            mainVideo.addEventListener('click', function() {
-                if (mainVideo.readyState === 0) {
-                    mainVideo.load();
-                }
-            });
         }
+
+        // Force immediate load on all devices
+        try { mainVideo.load(); } catch (e) {}
+
+        // Preload a few seconds to prevent initial lag when possible
+        mainVideo.addEventListener('loadedmetadata', function() {
+            if (mainVideo.readyState >= 2) { // HAVE_CURRENT_DATA or higher
+                mainVideo.currentTime = 0.1; // Preload first frame
+                mainVideo.currentTime = 0;
+            }
+        });
     }
     
     // Mobile video error handler
@@ -210,7 +190,7 @@ document.addEventListener('DOMContentLoaded', function() {
             ">
                 <h4 style="margin-bottom: 10px;">📱 Mobile Video Issue</h4>
                 <p style="margin-bottom: 15px;">Use the "Direct Link" button below to view the video in your browser or download it.</p>
-                <a href="https://page.gensparksite.com/get_upload_url/80b534c179de8d2326ead76a1221adc99e98b8d6d47a379efffe76ea1916b99f/default/92171563-246f-41e2-aabd-8a5af196defb" 
+                <a href="${LOCAL_VIDEO_URL}" 
                    target="_blank" 
                    style="
                        background: #ff6b6b;
@@ -735,7 +715,7 @@ function handleMobileVideoError(video) {
         msg.textContent = 'Use the "Direct Link" below to view the video in your browser or download it.';
 
         const link = document.createElement('a');
-        link.href = 'videos/msnbc_compilation_final.mp4';
+        link.href = 'charlie kirk working video/f56830e5-22c2-4b3d-9dc2-e2c069934524 (2).mp4';
         link.target = '_blank';
         link.rel = 'noopener';
         link.textContent = 'Open Video in New Tab';
