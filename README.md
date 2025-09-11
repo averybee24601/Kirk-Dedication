@@ -6,9 +6,17 @@ This website documents MSNBC's irresponsible coverage of the Charlie Kirk assass
 
 ## Current Features
 
-### ✅ Recently Simplified - RELIABLE SHARING APPROACH
+### ✅ Recently Fixed - CLEAN VIDEO LAYOUT
 
-**NEW: Clean and Simple Sharing**
+**NEW: Fixed Layout Issues**
+- **Clean Video Display**: Removed overlay elements that were causing layout conflicts
+- **Proper Video Structure**: Fixed duplicate and nested video containers in HTML
+- **No More Button Overlays**: Social media buttons no longer appear inside the video area
+- **Improved Performance**: Removed unnecessary JavaScript overlays for faster loading
+
+### ✅ Simplified Sharing Approach
+
+**Clean and Simple Sharing**
 - **Clear Messaging**: Prominent display of the key message to share
 - **Video Evidence**: Direct access to the compilation video with MSNBC clips
 - **Website Link Copy**: Simple one-click copying of the website URL

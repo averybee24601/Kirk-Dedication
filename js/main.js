@@ -1,18 +1,73 @@
 // Main JavaScript functionality
 document.addEventListener('DOMContentLoaded', function() {
     
-    // Video player functionality with enhanced loading and buffer management
+    // Video player functionality with mobile optimization
     const mainVideo = document.querySelector('.compilation-video');
     const playButtons = document.querySelectorAll('.play-clip');
     
-    // Enhanced video loading with buffer optimization
+    // Mobile device detection
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // Enhanced video loading with mobile-specific optimizations
     if (mainVideo) {
+        // Set preload to auto for better thumbnail display
         mainVideo.preload = 'auto';
+        
+        // Force poster display as background
+        if (mainVideo.poster) {
+            mainVideo.style.backgroundImage = `url(${mainVideo.poster})`;
+        }
+        
+        // Add mobile-specific attributes
+        if (isMobile) {
+            mainVideo.setAttribute('playsinline', '');
+            mainVideo.setAttribute('webkit-playsinline', '');
+        }
         
         // Optimize video playback settings
         mainVideo.addEventListener('loadstart', function() {
             console.log('Loading compilation video');
             showVideoStatus('Loading MSNBC evidence compilation...');
+        });
+        
+        mainVideo.addEventListener('loadedmetadata', function() {
+            console.log('Video metadata loaded - thumbnail should appear');
+            hideVideoStatus();
+            
+            if (mainVideo && mainVideo.duration > 0) {
+                // Generate thumbnail by seeking to 1 second then back
+                const originalTime = mainVideo.currentTime;
+                mainVideo.currentTime = Math.min(1, mainVideo.duration * 0.1);
+                
+                setTimeout(() => {
+                    mainVideo.currentTime = originalTime;
+                }, 100);
+            }
+        });
+        
+        mainVideo.addEventListener('error', function() {
+            console.log('Video loading failed');
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            if (mainVideo.error) {
+                console.log('Video error details:', mainVideo.error);
+                
+                if (isMobile) {
+                    // Mobile-specific error handling
+                    showVideoStatus('Video loading failed on mobile. Try using the Direct Link.');
+                } else {
+                    // Desktop error handling
+                    const sources = mainVideo.querySelectorAll('source');
+                    if (sources.length > 1) {
+                        // Remove the failed source and reload
+                        sources[0].remove();
+                        mainVideo.load();
+                        showVideoStatus('Trying backup video source...');
+                    } else {
+                        showVideoStatus('Click "Direct Link" or "Download" to access the video');
+                    }
+                }
+            }
         });
         
         mainVideo.addEventListener('canplay', function() {
@@ -37,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         mainVideo.addEventListener('error', function(e) {
             console.log('Video error:', e);
-            showVideoStatus('Video loading... Please wait or try refreshing the page.');
+            handleMobileVideoError(mainVideo);
         });
         
         mainVideo.addEventListener('loadeddata', function() {
@@ -45,29 +100,80 @@ document.addEventListener('DOMContentLoaded', function() {
             hideVideoStatus();
         });
         
-        // Add buffer management
-        mainVideo.addEventListener('progress', function() {
-            if (mainVideo.buffered.length > 0) {
-                const bufferedEnd = mainVideo.buffered.end(mainVideo.buffered.length - 1);
-                const duration = mainVideo.duration;
-                const bufferedPercent = (bufferedEnd / duration) * 100;
-                
-                if (bufferedPercent > 10) { // Once 10% is buffered
-                    hideVideoStatus();
+        // Add buffer management (desktop only)
+        if (!isMobile) {
+            mainVideo.addEventListener('progress', function() {
+                if (mainVideo.buffered.length > 0) {
+                    const bufferedEnd = mainVideo.buffered.end(mainVideo.buffered.length - 1);
+                    const duration = mainVideo.duration;
+                    const bufferedPercent = (bufferedEnd / duration) * 100;
+                    
+                    if (bufferedPercent > 10) { // Once 10% is buffered
+                        hideVideoStatus();
+                    }
                 }
-            }
-        });
+            });
+            
+            // Desktop: Force immediate load
+            mainVideo.load();
+            
+            // Preload a few seconds to prevent initial lag
+            mainVideo.addEventListener('loadedmetadata', function() {
+                if (mainVideo.readyState >= 2) { // HAVE_CURRENT_DATA or higher
+                    mainVideo.currentTime = 0.1; // Preload first frame
+                    mainVideo.currentTime = 0;
+                }
+            });
+        } else {
+            // Mobile-specific loading strategy
+            mainVideo.addEventListener('click', function() {
+                if (mainVideo.readyState === 0) {
+                    showVideoStatus('Loading video...');
+                    mainVideo.load();
+                }
+            });
+        }
+    }
+    
+    // Mobile video error handler
+    function handleMobileVideoError(video) {
+        console.log('Mobile video error detected');
+        showVideoStatus('Tap "Direct Link" below to access video');
         
-        // Force immediate load
-        mainVideo.load();
+        // Create mobile-friendly error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'mobile-video-error';
+        errorDiv.innerHTML = `
+            <div style="
+                background: rgba(255, 107, 107, 0.1);
+                border: 2px solid #ff6b6b;
+                padding: 20px;
+                border-radius: 15px;
+                text-align: center;
+                margin: 15px 0;
+                color: #ff6b6b;
+            ">
+                <h4 style="margin-bottom: 10px;">📱 Mobile Video Issue</h4>
+                <p style="margin-bottom: 15px;">Use the "Direct Link" button below to view the video in your browser or download it.</p>
+                <a href="https://page.gensparksite.com/get_upload_url/80b534c179de8d2326ead76a1221adc99e98b8d6d47a379efffe76ea1916b99f/default/92171563-246f-41e2-aabd-8a5af196defb" 
+                   target="_blank" 
+                   style="
+                       background: #ff6b6b;
+                       color: white;
+                       padding: 12px 20px;
+                       border-radius: 8px;
+                       text-decoration: none;
+                       display: inline-block;
+                       font-weight: bold;
+                   ">
+                   🎥 Open Video in New Tab
+                </a>
+            </div>
+        `;
         
-        // Preload a few seconds to prevent initial lag
-        mainVideo.addEventListener('loadedmetadata', function() {
-            if (mainVideo.readyState >= 2) { // HAVE_CURRENT_DATA or higher
-                mainVideo.currentTime = 0.1; // Preload first frame
-                mainVideo.currentTime = 0;
-            }
-        });
+        if (video.parentNode && !video.parentNode.querySelector('.mobile-video-error')) {
+            video.parentNode.insertBefore(errorDiv, video.nextSibling);
+        }
     }
     
     function showVideoStatus(message) {
@@ -359,29 +465,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Add video controls enhancement
-    document.querySelectorAll('video').forEach(video => {
-        // Add custom control panel
-        const controlPanel = document.createElement('div');
-        controlPanel.className = 'video-controls-info';
-        controlPanel.innerHTML = `
-            <div style="
-                background: rgba(0, 0, 0, 0.8);
-                color: white;
-                padding: 10px;
-                font-size: 0.9rem;
-                text-align: center;
-                border-radius: 0 0 10px 10px;
-            ">
-                <i class="fas fa-info-circle"></i>
-                Right-click disabled to protect evidence integrity
-            </div>
-        `;
-        
-        if (video.parentNode) {
-            video.parentNode.appendChild(controlPanel);
-        }
-    });
+    // Video controls enhancement (disabled to fix layout issues)
+    // Custom control panels removed to prevent overlay conflicts
     
     // Performance monitoring
     const performanceObserver = new PerformanceObserver((list) => {
@@ -445,42 +530,26 @@ function formatTimestamp(seconds) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-// Add timestamp display to videos
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('video').forEach(video => {
-        const timestampDisplay = document.createElement('div');
-        timestampDisplay.className = 'video-timestamp';
-        timestampDisplay.style.cssText = `
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            display: none;
-        `;
-        
-        if (video.parentNode) {
-            video.parentNode.style.position = 'relative';
-            video.parentNode.appendChild(timestampDisplay);
-        }
-        
-        video.addEventListener('timeupdate', function() {
-            timestampDisplay.textContent = formatTimestamp(video.currentTime);
-        });
-        
-        video.addEventListener('play', function() {
-            timestampDisplay.style.display = 'block';
-        });
-        
-        video.addEventListener('pause', function() {
-            timestampDisplay.style.display = 'none';
-        });
-    });
-});
+// Timestamp display disabled to fix layout issues
+// Absolute positioned overlays were causing sharing buttons to appear inside video area
+
+// Video status functions
+function showVideoStatus(message) {
+    const statusElement = document.querySelector('.video-status');
+    if (statusElement) {
+        statusElement.textContent = message;
+        statusElement.style.display = 'block';
+    } else {
+        console.log('Video Status:', message);
+    }
+}
+
+function hideVideoStatus() {
+    const statusElement = document.querySelector('.video-status');
+    if (statusElement) {
+        statusElement.style.display = 'none';
+    }
+}
 
 // Video handling functions
 function handleVideoLoad() {
@@ -500,22 +569,44 @@ function handleVideoLoad() {
     }
 }
 
+function handleVideoMetadata() {
+    console.log('Video metadata loaded - thumbnail should appear');
+    hideVideoStatus();
+    
+    const video = document.querySelector('.compilation-video');
+    if (video && video.duration > 0) {
+        // Generate thumbnail by seeking to 1 second then back
+        const originalTime = video.currentTime;
+        video.currentTime = Math.min(1, video.duration * 0.1);
+        
+        setTimeout(() => {
+            video.currentTime = originalTime;
+        }, 100);
+    }
+}
+
 function handleVideoError() {
     console.log('Video loading failed');
     const video = document.querySelector('.compilation-video');
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
     if (video && video.error) {
         console.log('Video error details:', video.error);
         
-        // Try to switch to backup source
-        const sources = video.querySelectorAll('source');
-        if (sources.length > 1) {
-            // Remove the failed source and reload
-            sources[0].remove();
-            video.load();
-            showVideoStatus('Trying backup video source...');
+        if (isMobile) {
+            // Mobile-specific error handling
+            showVideoStatus('Video loading failed on mobile. Try using the Direct Link.');
         } else {
-            showVideoStatus('Click "Direct Link" or "Download" to access the video');
+            // Desktop error handling
+            const sources = video.querySelectorAll('source');
+            if (sources.length > 1) {
+                // Remove the failed source and reload
+                sources[0].remove();
+                video.load();
+                showVideoStatus('Trying backup video source...');
+            } else {
+                showVideoStatus('Click "Direct Link" or "Download" to access the video');
+            }
         }
     }
 }

@@ -293,6 +293,8 @@ section {
     width: 100%;
     max-width: 900px;
     height: auto;
+    min-height: 400px;
+    aspect-ratio: 16/9;
     border-radius: 15px;
     box-shadow: 0 20px 40px rgba(255, 0, 0, 0.3);
     display: block;
@@ -307,6 +309,48 @@ section {
     
     /* Ensure smooth playback */
     object-fit: contain;
+    
+    /* Fix poster/thumbnail display */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    
+    /* Mobile-specific optimizations */
+    -webkit-playsinline: true;
+    
+    /* Prevent video zoom on mobile */
+    touch-action: manipulation;
+}
+
+/* Mobile-specific video styles */
+@media (max-width: 768px) {
+    .compilation-video {
+        max-width: 100%;
+        border-radius: 10px;
+        
+        /* Mobile video optimizations */
+        -webkit-playsinline: true;
+        playsinline: true;
+        
+        /* Prevent fullscreen issues on iOS */
+        -webkit-transform: translate3d(0, 0, 0);
+        transform: translate3d(0, 0, 0);
+        
+        /* Better mobile performance */
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+    }
+    
+    .video-container {
+        position: relative;
+        /* Prevent mobile scrolling issues */
+        overflow: hidden;
+    }
+    
+    /* Mobile video loading indicator */
+    .mobile-video-error {
+        margin: 10px 0;
+    }
 }
 
 .video-caption {
