@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
         mainVideo.preload = 'auto';
 
         // Generate a clean thumbnail from the actual video frame
-        generateDynamicPoster(mainVideo);
+        generateDynamicPoster(mainVideo, { preferPlayThenPauseOnMobile: true });
         
         // Add mobile-specific attributes
         if (isMobile) {
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
         mainVideo.addEventListener('loadedmetadata', function() {
             console.log('Video metadata loaded - preparing thumbnail');
             hideVideoStatus();
-            generateDynamicPoster(mainVideo);
+            generateDynamicPoster(mainVideo, { preferPlayThenPauseOnMobile: true });
         });
         
         // Desktop-only error recovery; mobile uses a simple fallback card
@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function() {
         mainVideo.addEventListener('loadeddata', function() {
             console.log('Video data loaded');
             hideVideoStatus();
-            generateDynamicPoster(mainVideo);
+            generateDynamicPoster(mainVideo, { preferPlayThenPauseOnMobile: true });
         });
         
         // Add buffer management (desktop only)
@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Create a poster image from the video itself for a clean thumbnail
-    async function generateDynamicPoster(video) {
+    async function generateDynamicPoster(video, options = {}) {
         try {
             if (!video || video.dataset.posterGenerated === 'true') return;
 
@@ -172,6 +172,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const captureTimeSeconds = Math.min(1, (video.duration || 1) - 0.05);
             const previousTime = isNaN(video.currentTime) ? 0 : video.currentTime;
+
+            // On iOS Safari, seeking without a play may not render frames. Do a brief muted play.
+            const needMobileKick = /iPhone|iPad|iPod/i.test(navigator.userAgent) && options.preferPlayThenPauseOnMobile;
+            if (needMobileKick) {
+                try {
+                    video.muted = true;
+                    await video.play();
+                    // Pause quickly after a tick so a frame is available
+                    await new Promise(r => setTimeout(r, 120));
+                    video.pause();
+                } catch (e) {
+                    // ignore; continue with best effort
+                }
+            }
 
             await new Promise(resolve => {
                 const onSeeked = () => {
