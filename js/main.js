@@ -27,18 +27,44 @@ document.addEventListener('DOMContentLoaded', function() {
     // Use server download route so mobile gets attachment behavior
     const downloadEl = document.getElementById('download-video');
     if (downloadEl) {
-        // Always request the exact file via the server route to force attachment
-        const downloadRoute = `/download/video?variant=original`;
-        downloadEl.href = downloadRoute;
-        downloadEl.removeAttribute('target');
-        downloadEl.setAttribute('rel', 'noopener');
+        // Mobile-only behavior: remove Download button entirely
+        if (isMobile) {
+            downloadEl.remove();
+        } else {
+            // Desktop keeps forced-download behavior via server route
+            const downloadRoute = `/download/video?variant=original`;
+            downloadEl.href = downloadRoute;
+            downloadEl.removeAttribute('target');
+            downloadEl.setAttribute('rel', 'noopener');
 
-        // If the route is unavailable (static hosting), force a JS-driven download of the exact file
-        try {
-            fetch(downloadRoute, { method: 'HEAD' })
-                .then(res => {
-                    if (!res || !res.ok) {
-                        // Intercept click and download via blob to avoid opening a tab on mobile
+            // Desktop static-host fallback: blob download
+            try {
+                fetch(downloadRoute, { method: 'HEAD' })
+                    .then(res => {
+                        if (!res || !res.ok) {
+                            downloadEl.addEventListener('click', async function(ev) {
+                                ev.preventDefault();
+                                try {
+                                    const response = await fetch(ORIGINAL_URL, { cache: 'no-store' });
+                                    if (!response.ok) throw new Error('Network error');
+                                    const blob = await response.blob();
+                                    const objectUrl = URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = objectUrl;
+                                    a.download = 'MSNBC_Should_Lose_License_Evidence.mp4';
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    setTimeout(() => {
+                                        URL.revokeObjectURL(objectUrl);
+                                        a.remove();
+                                    }, 1500);
+                                } catch (err) {
+                                    window.location.href = ORIGINAL_URL;
+                                }
+                            }, { once: true });
+                        }
+                    })
+                    .catch(() => {
                         downloadEl.addEventListener('click', async function(ev) {
                             ev.preventDefault();
                             try {
@@ -56,36 +82,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                     a.remove();
                                 }, 1500);
                             } catch (err) {
-                                // As a last resort, attempt to open the file; some iOS versions still present a save sheet
                                 window.location.href = ORIGINAL_URL;
                             }
                         }, { once: true });
-                    }
-                })
-                .catch(() => {
-                    // Same JS-driven download fallback
-                    downloadEl.addEventListener('click', async function(ev) {
-                        ev.preventDefault();
-                        try {
-                            const response = await fetch(ORIGINAL_URL, { cache: 'no-store' });
-                            if (!response.ok) throw new Error('Network error');
-                            const blob = await response.blob();
-                            const objectUrl = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = objectUrl;
-                            a.download = 'MSNBC_Should_Lose_License_Evidence.mp4';
-                            document.body.appendChild(a);
-                            a.click();
-                            setTimeout(() => {
-                                URL.revokeObjectURL(objectUrl);
-                                a.remove();
-                            }, 1500);
-                        } catch (err) {
-                            window.location.href = ORIGINAL_URL;
-                        }
-                    }, { once: true });
-                });
-        } catch (_) {}
+                    });
+            } catch (_) {}
+        }
     }
 
     // Clean up mobile-fallback text and link (deduplicated)
