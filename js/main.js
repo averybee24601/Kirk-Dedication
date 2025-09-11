@@ -18,10 +18,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Fix Direct Link target
     const directLinkEl = document.getElementById('direct-link');
     if (directLinkEl) {
-        // Always open the exact file in a new tab
-        directLinkEl.href = ORIGINAL_URL;
-        directLinkEl.rel = 'noopener';
-        directLinkEl.target = '_blank';
+        if (isMobile) {
+            // Remove Direct Link on mobile per request
+            directLinkEl.remove();
+        } else {
+            // Desktop: keep direct link opening in a new tab
+            directLinkEl.href = ORIGINAL_URL;
+            directLinkEl.rel = 'noopener';
+            directLinkEl.target = '_blank';
+        }
     }
 
     // Use server download route so mobile gets attachment behavior
@@ -99,10 +104,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         const a = mobileFallback.querySelector('a');
         if (a) {
-            a.href = ORIGINAL_URL;
-            a.textContent = 'Open Video in New Tab';
-            a.rel = 'noopener';
-            a.target = '_blank';
+            if (isMobile) {
+                // Remove the mobile direct link as it's not working
+                a.remove();
+                if (p) {
+                    p.textContent = "Playback on mobile is available via the player above.";
+                }
+            } else {
+                a.href = ORIGINAL_URL;
+                a.textContent = 'Open Video in New Tab';
+                a.rel = 'noopener';
+                a.target = '_blank';
+            }
         }
     }
 
