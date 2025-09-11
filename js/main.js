@@ -10,40 +10,67 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Video URL used across the site
     // Use URL-encoded path to ensure mobile browsers (iOS Safari) resolve correctly
-    const LOCAL_VIDEO_URL = 'charlie%20kirk%20working%20video/f56830e5-22c2-4b3d-9dc2-e2c069934524%20%282%29.mp4';
+    // Canonical source is the exact file requested
+    const ORIGINAL_URL = 'videos/msnbc_compilation_final.mp4';
+    const H264_URL = 'videos/msnbc_compilation_final_h264.mp4';
+    let LOCAL_VIDEO_URL = ORIGINAL_URL;
 
     // Fix Direct Link target
+    // Capability detection: does this browser play VP9/Opus inside MP4?
+    function supportsVp9Mp4() {
+        const v = document.createElement('video');
+        // Safari returns empty string for VP9 in MP4; Chromium returns 'probably' or 'maybe'
+        const tests = [
+            'video/mp4; codecs="vp09"',
+            'video/mp4; codecs="vp9"',
+            'video/mp4; codecs="vp09.00.10.08"'
+        ];
+        return tests.some(t => {
+            const r = v.canPlayType(t);
+            return r === 'probably' || r === 'maybe';
+        });
+    }
+
+    const vp9Ok = supportsVp9Mp4();
+    if (!vp9Ok) {
+        LOCAL_VIDEO_URL = H264_URL; // keep page interactions pointing to a playable file
+    }
+
     const directLinkEl = document.getElementById('direct-link');
     if (directLinkEl) {
-        directLinkEl.href = LOCAL_VIDEO_URL;
+        // Default to the exact file; swap to H264 if unsupported
+        directLinkEl.href = vp9Ok ? ORIGINAL_URL : H264_URL;
         directLinkEl.rel = 'noopener';
         directLinkEl.target = '_blank';
     }
 
-    // Reliable mobile download: fetch blob then trigger a save
+    // Use server download route so mobile gets attachment behavior
     const downloadEl = document.getElementById('download-video');
     if (downloadEl) {
-        downloadEl.addEventListener('click', async function(e) {
-            try {
-                e.preventDefault();
-                const response = await fetch(LOCAL_VIDEO_URL, { cache: 'no-store' });
-                if (!response.ok) throw new Error('Network error');
-                const blob = await response.blob();
-                const objectUrl = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = objectUrl;
-                a.download = 'MSNBC_Should_Lose_License_Evidence.mp4';
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(() => {
-                    URL.revokeObjectURL(objectUrl);
-                    a.remove();
-                }, 1000);
-            } catch (err) {
-                // As a last resort, open in a new tab where user can save
-                window.open(LOCAL_VIDEO_URL, '_blank');
-            }
-        });
+        // Route chooses between original and H264 based on variant parameter
+        const variant = vp9Ok ? 'original' : 'h264';
+        downloadEl.href = `/download/video?variant=${variant}`;
+        downloadEl.removeAttribute('target');
+        downloadEl.setAttribute('rel', 'noopener');
+
+        // Fallback for static hosting where the server route isn't available
+        try {
+            fetch(`/download/video?variant=${variant}`, { method: 'HEAD' })
+                .then(res => {
+                    if (!res || !res.ok) {
+                        downloadEl.href = vp9Ok ? ORIGINAL_URL : H264_URL;
+                        const name = vp9Ok ? 'MSNBC_Should_Lose_License_Evidence.mp4'
+                                           : 'MSNBC_Should_Lose_License_Evidence_mobile.mp4';
+                        downloadEl.setAttribute('download', name);
+                    }
+                })
+                .catch(() => {
+                    downloadEl.href = vp9Ok ? ORIGINAL_URL : H264_URL;
+                    const name = vp9Ok ? 'MSNBC_Should_Lose_License_Evidence.mp4'
+                                       : 'MSNBC_Should_Lose_License_Evidence_mobile.mp4';
+                    downloadEl.setAttribute('download', name);
+                });
+        } catch (_) {}
     }
 
     // Clean up mobile-fallback text and link (deduplicated)
@@ -55,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         const a = mobileFallback.querySelector('a');
         if (a) {
-            a.href = LOCAL_VIDEO_URL;
+            a.href = vp9Ok ? ORIGINAL_URL : H264_URL;
             a.textContent = 'Open Video in New Tab';
             a.rel = 'noopener';
             a.target = '_blank';

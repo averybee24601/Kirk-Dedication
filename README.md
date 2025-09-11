@@ -6,6 +6,11 @@ This website documents MSNBC's irresponsible coverage of the Charlie Kirk assass
 
 ## Current Features
 
+### ✅ Mobile Downloads Fixed
+
+- Dedicated download endpoint (`/download/video`) forces `Content-Disposition: attachment` so mobile browsers save the file instead of streaming it.
+- Download button now points to this endpoint. Start the site with `npm start` (Express server) for the download to work on both desktop and mobile.
+
 ### ✅ Recently Fixed - CLEAN VIDEO LAYOUT
 
 **NEW: Fixed Layout Issues**
