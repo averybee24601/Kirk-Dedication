@@ -19,23 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
         directLinkEl.target = '_blank';
     }
 
-    // Clean up mobile-fallback text and link
-    const mobileFallback = document.querySelector('.mobile-fallback');
-    if (mobileFallback) {
-        const p = mobileFallback.querySelector('p');
-        if (p) {
-            p.textContent = "Mobile users: If the video doesn't load, use the Direct Link button below.";
-        }
-        const a = mobileFallback.querySelector('a');
-        if (a) {
-            a.href = LOCAL_VIDEO_URL;
-            a.textContent = 'Open Video in New Tab';
-            a.rel = 'noopener';
-            a.target = '_blank';
-        }
-    }
-
-    // Clean up mobile-fallback text and link
+    // Clean up mobile-fallback text and link (deduplicated)
     const mobileFallback = document.querySelector('.mobile-fallback');
     if (mobileFallback) {
         const p = mobileFallback.querySelector('p');
@@ -53,11 +37,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Enhanced video loading with mobile-specific optimizations
     if (mainVideo) {
-        // Ensure the browser aggressively fetches the video on all devices
-        mainVideo.preload = 'auto';
+        // Ensure we do NOT auto-play or auto-mute
+        try { mainVideo.autoplay = false; } catch (e) {}
+        try { mainVideo.muted = false; } catch (e) {}
+        mainVideo.removeAttribute('autoplay');
+        mainVideo.removeAttribute('muted');
 
-        // Generate a clean thumbnail from the actual video frame
-        generateDynamicPoster(mainVideo, { preferPlayThenPauseOnMobile: true });
+        // Use metadata-only preload so the browser doesn't start buffering full video
+        mainVideo.preload = 'metadata';
+
+        // Do not attempt dynamic poster generation that requires playback
+        // Poster is provided statically in HTML
         
         // Add mobile-specific attributes
         if (isMobile) {
@@ -74,9 +64,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         mainVideo.addEventListener('loadedmetadata', function() {
-            console.log('Video metadata loaded - preparing thumbnail');
+            console.log('Video metadata loaded');
             hideVideoStatus();
-            generateDynamicPoster(mainVideo, { preferPlayThenPauseOnMobile: true });
         });
         
         // Desktop-only error recovery; mobile uses a simple fallback card
@@ -130,7 +119,6 @@ document.addEventListener('DOMContentLoaded', function() {
         mainVideo.addEventListener('loadeddata', function() {
             console.log('Video data loaded');
             hideVideoStatus();
-            generateDynamicPoster(mainVideo, { preferPlayThenPauseOnMobile: true });
         });
         
         // Add buffer management (desktop only)
@@ -148,84 +136,11 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        // Force immediate load on all devices
-        try { mainVideo.load(); } catch (e) {}
-
-        // Preload a few seconds to prevent initial lag when possible
-        mainVideo.addEventListener('loadedmetadata', function() {
-            if (mainVideo.readyState >= 2) { // HAVE_CURRENT_DATA or higher
-                mainVideo.currentTime = 0.1; // Preload first frame
-                mainVideo.currentTime = 0;
-            }
-        });
+        // Do NOT force load or seek frames; let the browser idle until user action
     }
     
     // Create a poster image from the video itself for a clean thumbnail
-    async function generateDynamicPoster(video, options = {}) {
-        try {
-            if (!video || video.dataset.posterGenerated === 'true') return;
-
-            // Wait for metadata (dimensions)
-            if (video.readyState < 1) {
-                await new Promise(resolve => video.addEventListener('loadedmetadata', resolve, { once: true }));
-            }
-
-            const captureTimeSeconds = Math.min(1, (video.duration || 1) - 0.05);
-            const previousTime = isNaN(video.currentTime) ? 0 : video.currentTime;
-
-            // On iOS Safari, seeking without a play may not render frames. Do a brief muted play.
-            const needMobileKick = /iPhone|iPad|iPod/i.test(navigator.userAgent) && options.preferPlayThenPauseOnMobile;
-            if (needMobileKick) {
-                try {
-                    video.muted = true;
-                    await video.play();
-                    // Pause quickly after a tick so a frame is available
-                    await new Promise(r => setTimeout(r, 120));
-                    video.pause();
-                } catch (e) {
-                    // ignore; continue with best effort
-                }
-            }
-
-            await new Promise(resolve => {
-                const onSeeked = () => {
-                    video.removeEventListener('seeked', onSeeked);
-                    resolve();
-                };
-                try {
-                    video.addEventListener('seeked', onSeeked);
-                    video.currentTime = captureTimeSeconds;
-                } catch (e) {
-                    resolve();
-                }
-            });
-
-            const width = video.videoWidth || 1280;
-            const height = video.videoHeight || 720;
-            if (width && height) {
-                const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, width, height);
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-                video.setAttribute('poster', dataUrl);
-                video.style.backgroundImage = `url(${dataUrl})`;
-                video.style.backgroundSize = 'cover';
-                video.style.backgroundPosition = 'center';
-                video.dataset.posterGenerated = 'true';
-            }
-
-            // Restore original time without starting playback
-            try {
-                if (!isNaN(previousTime)) {
-                    video.currentTime = previousTime;
-                }
-            } catch (e) {}
-        } catch (e) {
-            console.log('Thumbnail generation failed', e);
-        }
-    }
+    // Dynamic poster generation removed to avoid any background playback.
 
     // Mobile video error handler
     function handleMobileVideoError(video) {
