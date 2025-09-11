@@ -55,11 +55,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (mainVideo) {
         // Ensure the browser aggressively fetches the video on all devices
         mainVideo.preload = 'auto';
-        
-        // Force poster display as background
-        if (mainVideo.poster) {
-            mainVideo.style.backgroundImage = `url(${mainVideo.poster})`;
-        }
+
+        // Generate a clean thumbnail from the actual video frame
+        generateDynamicPoster(mainVideo);
         
         // Add mobile-specific attributes
         if (isMobile) {
@@ -76,18 +74,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         mainVideo.addEventListener('loadedmetadata', function() {
-            console.log('Video metadata loaded - thumbnail should appear');
+            console.log('Video metadata loaded - preparing thumbnail');
             hideVideoStatus();
-            
-            if (mainVideo && mainVideo.duration > 0) {
-                // Generate thumbnail by seeking to 1 second then back
-                const originalTime = mainVideo.currentTime;
-                mainVideo.currentTime = Math.min(1, mainVideo.duration * 0.1);
-                
-                setTimeout(() => {
-                    mainVideo.currentTime = originalTime;
-                }, 100);
-            }
+            generateDynamicPoster(mainVideo);
         });
         
         // Desktop-only error recovery; mobile uses a simple fallback card
@@ -141,6 +130,7 @@ document.addEventListener('DOMContentLoaded', function() {
         mainVideo.addEventListener('loadeddata', function() {
             console.log('Video data loaded');
             hideVideoStatus();
+            generateDynamicPoster(mainVideo);
         });
         
         // Add buffer management (desktop only)
@@ -170,6 +160,59 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Create a poster image from the video itself for a clean thumbnail
+    async function generateDynamicPoster(video) {
+        try {
+            if (!video || video.dataset.posterGenerated === 'true') return;
+
+            // Wait for metadata (dimensions)
+            if (video.readyState < 1) {
+                await new Promise(resolve => video.addEventListener('loadedmetadata', resolve, { once: true }));
+            }
+
+            const captureTimeSeconds = Math.min(1, (video.duration || 1) - 0.05);
+            const previousTime = isNaN(video.currentTime) ? 0 : video.currentTime;
+
+            await new Promise(resolve => {
+                const onSeeked = () => {
+                    video.removeEventListener('seeked', onSeeked);
+                    resolve();
+                };
+                try {
+                    video.addEventListener('seeked', onSeeked);
+                    video.currentTime = captureTimeSeconds;
+                } catch (e) {
+                    resolve();
+                }
+            });
+
+            const width = video.videoWidth || 1280;
+            const height = video.videoHeight || 720;
+            if (width && height) {
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, width, height);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                video.setAttribute('poster', dataUrl);
+                video.style.backgroundImage = `url(${dataUrl})`;
+                video.style.backgroundSize = 'cover';
+                video.style.backgroundPosition = 'center';
+                video.dataset.posterGenerated = 'true';
+            }
+
+            // Restore original time without starting playback
+            try {
+                if (!isNaN(previousTime)) {
+                    video.currentTime = previousTime;
+                }
+            } catch (e) {}
+        } catch (e) {
+            console.log('Thumbnail generation failed', e);
+        }
+    }
+
     // Mobile video error handler
     function handleMobileVideoError(video) {
         console.log('Mobile video error detected');
