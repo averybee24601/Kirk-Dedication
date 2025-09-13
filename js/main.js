@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Video URL used across the site
     // Use URL-encoded path to ensure mobile browsers (iOS Safari) resolve correctly
     // Canonical source is the exact file requested
-    const ORIGINAL_URL = 'videos/MSNBC_COMPILATION_FINAL (4).MP4';
+    const ORIGINAL_URL = 'videos/msnbc_compilation_final (4).mp4';
     const H264_URL = ORIGINAL_URL;
     let LOCAL_VIDEO_URL = ORIGINAL_URL;
 
