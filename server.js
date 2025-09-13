@@ -56,10 +56,10 @@ app.use(express.static(ROOT, {
 }));
 
 // Current canonical video file (H.264/AAC compatible)
-const CURRENT_VIDEO_FILE = 'msnbc_compilation_final (4).mp4';
+const CURRENT_VIDEO_FILE = 'msnbc_compilation_final_h264.mp4';
 const REMOTE_FALLBACKS = [
-  'videos/msnbc_compilation_final (4).mp4',
   'videos/msnbc_compilation_final_h264.mp4',
+  'videos/msnbc_compilation_final (4).mp4',
   'videos/msnbc_compilation_final.mp4'
 ];
 // Paths to original (as provided) and a compatibility H.264/AAC encode

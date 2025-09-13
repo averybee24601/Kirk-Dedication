@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Video URL used across the site
     // Use URL-encoded path to ensure mobile browsers (iOS Safari) resolve correctly
     // Canonical source is the exact file requested
-    const ORIGINAL_URL = 'videos/msnbc_compilation_final (4).mp4';
+    const ORIGINAL_URL = 'videos/msnbc_compilation_final_h264.mp4';
     const H264_URL = ORIGINAL_URL;
     let LOCAL_VIDEO_URL = ORIGINAL_URL;
 
@@ -220,6 +220,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 border-radius: 10px;
                 z-index: 10;
                 font-size: 14px;
+                pointer-events: none;
             `;
             mainVideo.parentNode.style.position = 'relative';
             mainVideo.parentNode.appendChild(statusDiv);
@@ -393,6 +394,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 align-items: center;
                 gap: 10px;
                 z-index: 10;
+                pointer-events: none;
             ">
                 <i class="fas fa-spinner fa-spin"></i>
                 Loading evidence...
@@ -673,7 +675,7 @@ if (typeof gtag !== 'undefined') {
 // Service worker registration for offline access
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register('sw.js')
             .then(function(registration) {
                 console.log('ServiceWorker registration successful');
             })
