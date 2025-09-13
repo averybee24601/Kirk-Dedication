@@ -26,6 +26,7 @@
     <meta name="twitter:player:height" content="400">
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
 </head>
 <body>
@@ -109,8 +110,9 @@
                 </div>
                 <!-- Life & Legacy: Front-and-center tribute content -->
                 <div class="charlie-legacy">
-                    <h2 class="section-title">Charlie Kirk: Life & Legacy</h2>
-                    <p class="section-description">
+                    <h2 class="section-title memorial-title">Charlie Kirk: Life & Legacy</h2>
+                    <div class="title-ornament" aria-hidden="true"></div>
+                    <p class="section-description memorial-subtitle">
                         Before the headlines and controversy, Charlie Kirk was a son, a husband, and a friend to countless young people he encouraged to think for themselves.
                         He poured his energy into equipping the next generation to love America, speak the truth with courage, and serve their communities with purpose.
                     </p>
@@ -151,12 +153,36 @@
                             <h4>Faith, Family, and Duty</h4>
                             <p>Loved his family deeply and grounded his public work in timeless values — faith in God, dignity of every person, and gratitude for America.</p>
                         </div>
+
+                        <!-- Photo card placed to the right of the "Faith, Family, and Duty" card on desktop -->
+                        <figure class="action-card photo-card">
+                            <img class="family-photo" src="kirk photo/charlie_kirk_radar_family_photo.jpg" alt="Charlie Kirk with family">
+                            <figcaption>
+                                <span class="caption-pill">In loving memory — Husband, father, mentor. We honor the man behind the microphone.</span>
+                            </figcaption>
+                        </figure>
+
+                        <!-- Additional family portrait to balance the row -->
+                        <figure class="action-card photo-card">
+                            <img class="family-photo" src="kirk photo/charlie_kirk_family_portrait_3.jpg" alt="Charlie Kirk family portrait">
+                            <figcaption>
+                                <span class="caption-pill">Faith. Family. Forever.</span>
+                            </figcaption>
+                        </figure>
                     </div>
 
                     <div class="message-box" style="margin-top: 20px;">
                         <h3>How We Remember Him</h3>
                         <p>
                             As a builder of people. A mentor who gave time to students others ignored. A man who believed truth and courage, offered with grace, could change a life — and a country.
+                        </p>
+                    </div>
+
+                    <!-- Accountability intro that leads into the evidence section -->
+                    <div class="accountability-intro">
+                        <h3>What he would’ve wanted: Mainstream accountability</h3>
+                        <p>
+                            We honor Charlie by telling the truth in full. With humility, and without hatred, we preserve the record of what was said in the hours after his death — so that the culture learns, and does better.
                         </p>
                     </div>
                 </div>
@@ -176,7 +202,6 @@
                         controls
                         preload="metadata"
                         class="compilation-video"
-                        poster="https://page.gensparksite.com/v1/base64_upload/24a21324724017defa605855fa0f335a"
                         playsinline
                         webkit-playsinline>
                         <source src="videos/msnbc_compilation_final.mp4" type="video/mp4; codecs=vp9,opus">

@@ -12,6 +12,15 @@ body {
     background-color: #0a0a0a;
 }
 
+:root {
+    --bg: #0a0a0a;
+    --panel: rgba(255,255,255,0.04);
+    --panel-border: rgba(255,255,255,0.08);
+    --accent: #2e8cff;      /* memorial blue */
+    --accent-deep: #1b69ff; /* deeper blue */
+    --gold: #ffd166;        /* memorial gold */
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -20,7 +29,8 @@ body {
 
 /* Hero Section */
 .hero-section {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d1b69 100%);
+    background: radial-gradient(1200px 600px at 50% -10%, rgba(255, 209, 102, 0.12), transparent 60%),
+                linear-gradient(135deg, #121212 0%, #1d1d1d 60%, #2d1b69 100%);
     color: white;
     padding: 80px 0;
     text-align: center;
@@ -40,18 +50,19 @@ body {
 }
 
 .hero-title {
-    font-size: 3.5rem;
+    font-size: 3.6rem;
     font-weight: 700;
     margin-bottom: 10px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    font-family: 'Cinzel', serif;
+    text-shadow: 0 0 20px rgba(255, 209, 102, 0.25), 2px 2px 4px rgba(0,0,0,0.6);
     letter-spacing: -0.02em;
 }
 
 .hero-subtitle {
-    font-size: 1.8rem;
+    font-size: 1.7rem;
     font-weight: 400;
     margin-bottom: 20px;
-    color: #ff6b6b;
+    color: var(--gold);
     text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
 
@@ -79,7 +90,7 @@ body {
     display: block;
     font-size: 2.5rem;
     font-weight: 700;
-    color: #ff6b6b;
+    color: var(--gold);
     text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
 
@@ -147,7 +158,7 @@ body {
 }
 
 .nav-link:hover {
-    background: #ff6b6b;
+    background: linear-gradient(90deg, var(--accent-deep), var(--accent));
     transform: translateY(-2px);
 }
 
@@ -164,6 +175,29 @@ section {
     color: white;
 }
 
+.memorial-title {
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.5px;
+    background: linear-gradient(180deg, #ffffff 0%, #ffe9b3 40%, #ffd166 60%, #ffb347 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 30px rgba(255, 209, 102, 0.2);
+}
+
+.memorial-subtitle {
+    font-family: 'Lora', serif;
+}
+
+.title-ornament {
+    width: 180px;
+    height: 8px;
+    margin: 12px auto 28px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, transparent, rgba(255,209,102,0.7), transparent);
+    box-shadow: 0 0 30px rgba(255, 209, 102, 0.4);
+}
+
 .section-description {
     font-size: 1.2rem;
     text-align: center;
@@ -177,6 +211,15 @@ section {
 .tribute-section {
     background: linear-gradient(45deg, #1a1a1a, #2a2a2a);
     color: white;
+}
+
+.charlie-legacy { position: relative; }
+.charlie-legacy::before {
+    content: '';
+    position: absolute; inset: -40px 0 -20px 0;
+    pointer-events: none;
+    background: radial-gradient(800px 200px at 50% 0%, rgba(255, 209, 102, 0.08), transparent 60%);
+    filter: blur(12px);
 }
 
 .tribute-content {
@@ -219,7 +262,7 @@ section {
 .tribute-text h2 {
     font-size: 2.2rem;
     margin-bottom: 20px;
-    color: #ff6b6b;
+    color: var(--gold);
 }
 
 .lead {
@@ -235,7 +278,7 @@ section {
 
 .tribute-quotes blockquote {
     background: rgba(255, 255, 255, 0.05);
-    border-left: 4px solid #ff6b6b;
+    border-left: 4px solid var(--gold);
     padding: 20px;
     margin: 20px 0;
     border-radius: 8px;
@@ -243,20 +286,20 @@ section {
 
 .tribute-quotes cite {
     font-style: italic;
-    color: #ff6b6b;
+    color: var(--accent);
     font-weight: 500;
 }
 
 .tragedy-facts {
-    background: rgba(255, 107, 107, 0.1);
+    background: rgba(46, 140, 255, 0.12);
     padding: 25px;
     border-radius: 10px;
-    border: 1px solid rgba(255, 107, 107, 0.3);
+    border: 1px solid rgba(46, 140, 255, 0.25);
 }
 
 .tragedy-facts h3 {
     margin-bottom: 15px;
-    color: #ff6b6b;
+    color: var(--accent);
 }
 
 .tragedy-facts ul {
@@ -271,7 +314,7 @@ section {
 }
 
 .tragedy-facts i {
-    color: #ff6b6b;
+    color: var(--accent);
     width: 16px;
 }
 
@@ -353,6 +396,14 @@ section {
     }
 }
 
+/* Mobile-first timeline tightening */
+@media (max-width: 980px) {
+    .timeline { max-width: 560px; }
+    .timeline::before { left: 18px; }
+    .timeline-item { width: 100%; left: 0 !important; padding-left: 48px !important; padding-right: 0 !important; text-align: left !important; margin: 22px 0; }
+    .timeline-item .timeline-marker { left: 10px !important; right: auto !important; }
+}
+
 .video-caption {
     text-align: center;
     margin-top: 20px;
@@ -361,12 +412,12 @@ section {
 .video-caption h3 {
     font-size: 1.5rem;
     margin-bottom: 10px;
-    color: #ff6b6b;
+    color: var(--accent);
 }
 
 .source-videos h3 {
     margin-bottom: 20px;
-    color: #ff6b6b;
+    color: var(--accent);
 }
 
 .source-grid {
@@ -437,13 +488,13 @@ section {
 
 .key-clips h3 {
     margin-bottom: 30px;
-    color: #ff6b6b;
+    color: var(--accent);
     font-size: 1.8rem;
 }
 
 .clips-description {
-    background: rgba(255, 107, 107, 0.1);
-    border: 1px solid rgba(255, 107, 107, 0.3);
+    background: rgba(46, 140, 255, 0.1);
+    border: 1px solid rgba(46, 140, 255, 0.3);
     padding: 20px;
     border-radius: 10px;
     margin-bottom: 30px;
@@ -513,11 +564,11 @@ section {
 .clip-card h4 {
     font-size: 1.2rem;
     margin-bottom: 10px;
-    color: #ff6b6b;
+    color: var(--accent);
 }
 
 .play-clip {
-    background: #ff6b6b;
+    background: linear-gradient(90deg, var(--accent-deep), var(--accent));
     color: white;
     border: none;
     padding: 10px 20px;
@@ -529,7 +580,7 @@ section {
 }
 
 .play-clip:hover {
-    background: #ff5252;
+    background: #21b0ff;
     transform: translateY(-2px);
 }
 
@@ -545,7 +596,7 @@ section {
 }
 
 .info-box h4 {
-    color: #ff6b6b;
+    color: var(--accent);
     margin-bottom: 20px;
     font-size: 1.3rem;
 }
@@ -565,7 +616,7 @@ section {
 }
 
 .info-box li strong {
-    color: #ff6b6b;
+    color: var(--accent);
 }
 
 
@@ -573,8 +624,8 @@ section {
 
 
 .conclusion {
-    background: rgba(255, 107, 107, 0.15);
-    border-left: 4px solid #ff6b6b;
+    background: rgba(46, 140, 255, 0.12);
+    border-left: 4px solid var(--gold);
     padding: 20px;
     margin-top: 25px;
     border-radius: 5px;
@@ -594,9 +645,20 @@ section {
     color: white;
 }
 
+/* Reduce visual weight for the timeline header/spacing */
+.timeline-section .section-title {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+.timeline-section .section-description {
+    font-size: 1.05rem;
+    margin: 0 auto 22px;
+    max-width: 680px;
+}
+
 .timeline {
     position: relative;
-    max-width: 800px;
+    max-width: 760px;
     margin: 0 auto;
 }
 
@@ -607,12 +669,12 @@ section {
     transform: translateX(-50%);
     width: 2px;
     height: 100%;
-    background: linear-gradient(to bottom, #ff6b6b, #ff9500);
+    background: linear-gradient(to bottom, var(--accent), var(--gold));
 }
 
 .timeline-item {
     position: relative;
-    margin: 50px 0;
+    margin: 30px 0;
     width: 50%;
 }
 
@@ -629,8 +691,8 @@ section {
 
 .timeline-marker {
     position: absolute;
-    width: 20px;
-    height: 20px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     top: 0;
     z-index: 1;
@@ -646,7 +708,7 @@ section {
 
 .tragedy .timeline-marker {
     background: #333;
-    border: 3px solid #ff6b6b;
+    border: 3px solid var(--accent);
 }
 
 .attack .timeline-marker {
@@ -667,13 +729,13 @@ section {
 
 .timeline-content {
     background: rgba(255, 255, 255, 0.05);
-    padding: 25px;
-    border-radius: 12px;
+    padding: 18px;
+    border-radius: 10px;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .timeline-content h3 {
-    color: #ff6b6b;
+    color: var(--accent);
     margin-bottom: 10px;
 }
 
@@ -684,8 +746,8 @@ section {
 }
 
 .quote-box {
-    background: rgba(255, 107, 107, 0.1);
-    border-left: 4px solid #ff6b6b;
+    background: rgba(46, 140, 255, 0.1);
+    border-left: 4px solid var(--gold);
     padding: 15px;
     margin: 15px 0;
     border-radius: 5px;
@@ -716,19 +778,19 @@ section {
 
 .analysis-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 20px 40px rgba(255, 107, 107, 0.2);
+    box-shadow: 0 20px 40px rgba(46, 140, 255, 0.25);
 }
 
 .card-icon {
     font-size: 3rem;
-    color: #ff6b6b;
+    color: var(--accent);
     margin-bottom: 20px;
 }
 
 .analysis-card h3 {
     font-size: 1.3rem;
     margin-bottom: 15px;
-    color: #ff6b6b;
+    color: var(--accent);
 }
 
 .impact-meter {
@@ -753,7 +815,7 @@ section {
 }
 
 .meter.critical .meter-fill {
-    background: linear-gradient(90deg, #ff0000, #ff6b6b);
+    background: linear-gradient(90deg, var(--accent-deep), var(--accent));
 }
 
 .meter.high .meter-fill {
@@ -772,7 +834,7 @@ section {
 .comparison-section h3 {
     text-align: center;
     margin-bottom: 30px;
-    color: #ff6b6b;
+    color: var(--accent);
     font-size: 1.8rem;
 }
 
@@ -851,40 +913,44 @@ section {
 .call-to-action h3 {
     font-size: 2.2rem;
     margin-bottom: 20px;
-    color: #ff6b6b;
+    color: var(--accent);
 }
 
 .action-items {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 30px;
-    margin: 40px 0;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+    margin: 32px 0;
 }
 
 .action-card {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 30px;
-    border-radius: 15px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+    padding: 28px;
+    border-radius: 16px;
     text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--panel-border);
     transition: all 0.3s ease;
+    box-shadow: 0 18px 40px rgba(255, 107, 107, 0.12), 0 0 0 1px rgba(255, 209, 102, 0.07) inset;
+    backdrop-filter: blur(2px);
 }
 
 .action-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 20px 40px rgba(255, 107, 107, 0.2);
+    transform: translateY(-6px);
+    box-shadow: 0 28px 60px rgba(255, 107, 107, 0.25), 0 0 0 1px rgba(255, 209, 102, 0.18) inset;
+    border-color: rgba(255, 209, 102, 0.35);
 }
 
 .action-card i {
-    font-size: 2.5rem;
-    color: #ff6b6b;
-    margin-bottom: 20px;
+    font-size: 2.2rem;
+    color: var(--accent);
+    margin-bottom: 16px;
 }
 
 .action-card h4 {
     font-size: 1.2rem;
-    margin-bottom: 15px;
-    color: #ff6b6b;
+    margin-bottom: 12px;
+    background: linear-gradient(180deg, #ffffff, #bfe1ff 40%, var(--accent) 60%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 
 .final-message {
@@ -893,15 +959,68 @@ section {
 }
 
 .message-box {
-    background: rgba(255, 107, 107, 0.1);
-    border: 1px solid rgba(255, 107, 107, 0.3);
+    background: rgba(46, 140, 255, 0.10);
+    border: 1px solid rgba(46, 140, 255, 0.28);
     padding: 40px;
     border-radius: 15px;
     text-align: center;
 }
 
+.photo-card { padding: 0; overflow: hidden; position: relative; }
+.photo-card img.family-photo {
+    width: 100%; height: 100%; display: block; object-fit: cover; min-height: 260px;
+    filter: saturate(105%) contrast(102%);
+}
+.photo-card::after {
+    content: '';
+    position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(0,0,0,0.55) 100%);
+}
+.photo-card figcaption {
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 16px; color: #f6f3ea;
+    font-family: 'Lora', serif; font-size: 0.95rem;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+}
+
+.photo-card figcaption .caption-pill {
+    display: inline-block;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,209,102,0.6);
+    padding: 8px 12px;
+    border-radius: 10px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.45), inset 0 0 10px rgba(255,209,102,0.15);
+    color: #fff;
+    backdrop-filter: blur(2px);
+}
+
+/* Accountability intro banner */
+.accountability-intro {
+    margin: 24px auto 10px;
+    max-width: 920px;
+    background: linear-gradient(180deg, rgba(46,140,255,0.12), rgba(255,209,102,0.10));
+    border: 1px solid rgba(46,140,255,0.25);
+    border-left: 4px solid var(--gold);
+    padding: 20px 24px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.accountability-intro h3 {
+    margin-bottom: 8px;
+    color: var(--accent);
+}
+
+.accountability-intro p {
+    color: #ddd;
+}
+
+@media (min-width: 1200px) {
+    /* Encourage a balanced layout on very wide screens */
+    .action-items { grid-template-columns: repeat(4, 1fr); }
+}
+
 .message-box h3 {
-    color: #ff6b6b;
+    color: var(--gold);
     margin-bottom: 20px;
     font-size: 1.8rem;
 }
@@ -918,7 +1037,7 @@ section {
 
 .share-section h3 {
     margin-bottom: 30px;
-    color: #ff6b6b;
+    color: var(--accent);
 }
 
 .share-buttons {
@@ -962,18 +1081,18 @@ section {
 }
 
 .share-btn.universal {
-    background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+    background: linear-gradient(135deg, var(--accent-deep), var(--accent));
     color: white;
     font-weight: bold;
     font-size: 16px;
     padding: 15px 30px;
-    box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+    box-shadow: 0 5px 15px rgba(46, 140, 255, 0.35);
     animation: pulse 2s infinite;
 }
 
 .share-btn.universal:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+    box-shadow: 0 8px 25px rgba(46, 140, 255, 0.5);
 }
 
 @keyframes pulse {
@@ -1014,7 +1133,7 @@ section {
 }
 
 .download-video-btn {
-    background: linear-gradient(45deg, #e74c3c, #c0392b);
+    background: linear-gradient(45deg, var(--accent-deep), var(--accent));
     color: white;
     padding: 12px 25px;
     border-radius: 25px;
@@ -1027,9 +1146,9 @@ section {
 }
 
 .download-video-btn:hover {
-    background: linear-gradient(45deg, #c0392b, #a93226);
+    background: linear-gradient(45deg, var(--accent), #21b0ff);
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+    box-shadow: 0 5px 15px rgba(46, 140, 255, 0.35);
 }
 
 .download-video-btn i {
@@ -1056,12 +1175,12 @@ section {
 }
 
 .video-fallback h4 {
-    color: #ff6b6b;
+    color: var(--accent);
     margin-bottom: 15px;
 }
 
 .retry-btn {
-    background: #ff6b6b;
+    background: var(--accent);
     color: white;
     border: none;
     padding: 10px 20px;
@@ -1073,7 +1192,7 @@ section {
 }
 
 .retry-btn:hover {
-    background: #ff5252;
+    background: #21b0ff;
     transform: translateY(-2px);
 }
 
@@ -1104,7 +1223,7 @@ section {
 }
 
 .footer-section h4 {
-    color: #ff6b6b;
+    color: var(--accent);
     margin-bottom: 15px;
     font-size: 1.1rem;
 }
@@ -1217,12 +1336,12 @@ section {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #ff6b6b;
+    background: var(--accent);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #ff5252;
+    background: #2aa1ff;
 }
 
 /* Smooth Scrolling */
