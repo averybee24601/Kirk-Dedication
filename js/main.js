@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // When hosted on GitHub Pages, MP4s tracked via Git LFS
     // cannot be served from the same origin (they appear as tiny pointer files),
-    // so point sources and download links at raw.githubusercontent.com instead.
+    // so point sources at raw.githubusercontent.com instead.
     (function ensureHostedPlayback(){
         try {
             const host = location.hostname || '';
@@ -86,148 +86,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // Update action buttons differently per host
+            // Update video sources per host
             if (onPages) {
-                // On GitHub Pages, there is no server redirect. Use GitHub media URLs.
-                const dl = document.getElementById('download-video');
-                if (dl) {
-                    dl.href = MEDIA_BASE + ORIGINAL_URL;
-                    dl.setAttribute('download', 'MSNBC_Should_Lose_License_Evidence.mp4');
-                    dl.removeAttribute('target');
-                }
-                const direct = document.getElementById('direct-link');
-                if (direct) {
-                    // On Pages we can't proxy; open the media host directly for sharing
-                    direct.href = MEDIA_BASE + ORIGINAL_URL;
-                    direct.rel = 'noopener';
-                    direct.target = '_blank';
-                }
+                // On GitHub Pages, use GitHub media URLs for video sources
                 // Internal consumers should also use media host on Pages
                 LOCAL_VIDEO_URL = MEDIA_BASE + ORIGINAL_URL;
             } else if (onRailway) {
-                // On Railway, Direct Link should STREAM inline using the H.264/AAC proxy
-                const dl = document.getElementById('download-video');
-                if (dl) {
-                    // Ensure Download saves the file (attachment) using the H.264 variant
-                    dl.href = '/download/video?variant=h264';
-                    dl.removeAttribute('target');
-                }
-                const direct = document.getElementById('direct-link');
-                if (direct) {
-                    // Stream inline via server proxy to avoid codec issues
-                    direct.href = '/stream/video?variant=h264';
-                    direct.rel = 'noopener';
-                    direct.target = '_blank';
-                }
                 // Internal links use H.264 asset path for best compatibility
                 LOCAL_VIDEO_URL = H264_URL;
             }
         } catch (_) { /* noop */ }
     })();
 
-    // Fix Direct Link target
-    const directLinkEl = document.getElementById('direct-link');
-    if (directLinkEl) {
-        if (isMobile) {
-            // Remove Direct Link on mobile per request
-            directLinkEl.remove();
-        } else {
-            // Desktop: keep direct link opening in a new tab
-            directLinkEl.href = ORIGINAL_URL;
-            directLinkEl.rel = 'noopener';
-            directLinkEl.target = '_blank';
-        }
-    }
 
-    // Use server download route so mobile gets attachment behavior
-    const downloadEl = document.getElementById('download-video');
-    if (downloadEl) {
-        // Mobile-only behavior: remove Download button entirely
-        if (isMobile) {
-            downloadEl.remove();
-        } else {
-            // Desktop keeps forced-download behavior via server route
-            const downloadRoute = `/download/video?variant=original`;
-            downloadEl.href = downloadRoute;
-            downloadEl.removeAttribute('target');
-            downloadEl.setAttribute('rel', 'noopener');
 
-            // Desktop static-host fallback: blob download
-            try {
-                fetch(downloadRoute, { method: 'HEAD' })
-                    .then(res => {
-                        if (!res || !res.ok) {
-                            downloadEl.addEventListener('click', async function(ev) {
-                                ev.preventDefault();
-                                try {
-                                    const response = await fetch(ORIGINAL_URL, { cache: 'no-store' });
-                                    if (!response.ok) throw new Error('Network error');
-                                    const blob = await response.blob();
-                                    const objectUrl = URL.createObjectURL(blob);
-                                    const a = document.createElement('a');
-                                    a.href = objectUrl;
-                                    a.download = 'MSNBC_Should_Lose_License_Evidence.mp4';
-                                    document.body.appendChild(a);
-                                    a.click();
-                                    setTimeout(() => {
-                                        URL.revokeObjectURL(objectUrl);
-                                        a.remove();
-                                    }, 1500);
-                                } catch (err) {
-                                    window.location.href = ORIGINAL_URL;
-                                }
-                            }, { once: true });
-                        }
-                    })
-                    .catch(() => {
-                        downloadEl.addEventListener('click', async function(ev) {
-                            ev.preventDefault();
-                            try {
-                                const response = await fetch(ORIGINAL_URL, { cache: 'no-store' });
-                                if (!response.ok) throw new Error('Network error');
-                                const blob = await response.blob();
-                                const objectUrl = URL.createObjectURL(blob);
-                                const a = document.createElement('a');
-                                a.href = objectUrl;
-                                a.download = 'MSNBC_Should_Lose_License_Evidence.mp4';
-                                document.body.appendChild(a);
-                                a.click();
-                                setTimeout(() => {
-                                    URL.revokeObjectURL(objectUrl);
-                                    a.remove();
-                                }, 1500);
-                            } catch (err) {
-                                window.location.href = ORIGINAL_URL;
-                            }
-                        }, { once: true });
-                    });
-            } catch (_) {}
-        }
-    }
-
-    // Clean up mobile-fallback text and link (deduplicated)
-    const mobileFallback = document.querySelector('.mobile-fallback');
-    if (mobileFallback) {
-        const p = mobileFallback.querySelector('p');
-        if (p) {
-            p.textContent = "Mobile users: If the video doesn't load, use the Direct Link button below.";
-        }
-        const a = mobileFallback.querySelector('a');
-        if (a) {
-            if (isMobile) {
-                // Remove the mobile direct link as it's not working
-                a.remove();
-                if (p) {
-                    p.textContent = "Playback on mobile is available via the player above.";
-                }
-            } else {
-                a.href = ORIGINAL_URL;
-                a.textContent = 'Open Video in New Tab';
-                a.rel = 'noopener';
-                a.target = '_blank';
-            }
-        }
-    }
 
     // Enhanced video loading with mobile-specific optimizations
     if (mainVideo) {
@@ -275,7 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         mainVideo.load();
                         showVideoStatus('Trying backup video source...');
                     } else {
-                        showVideoStatus('Click "Direct Link" or "Download" to access the video');
+                        showVideoStatus('Video temporarily unavailable - please refresh the page');
                     }
                 }
             });
@@ -331,46 +203,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Create a poster image from the video itself for a clean thumbnail
     // Dynamic poster generation removed to avoid any background playback.
 
-    // Mobile video error handler
-    function handleMobileVideoError(video) {
-        console.log('Mobile video error detected');
-        showVideoStatus('Tap "Direct Link" below to access video');
-        
-        // Create mobile-friendly error message
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'mobile-video-error';
-        errorDiv.innerHTML = `
-            <div style="
-                background: rgba(255, 107, 107, 0.1);
-                border: 2px solid #ff6b6b;
-                padding: 20px;
-                border-radius: 15px;
-                text-align: center;
-                margin: 15px 0;
-                color: #ff6b6b;
-            ">
-                <h4 style="margin-bottom: 10px;">📱 Mobile Video Issue</h4>
-                <p style="margin-bottom: 15px;">Use the "Direct Link" button below to view the video in your browser or download it.</p>
-                <a href="${LOCAL_VIDEO_URL}" 
-                   target="_blank" 
-                   style="
-                       background: #ff6b6b;
-                       color: white;
-                       padding: 12px 20px;
-                       border-radius: 8px;
-                       text-decoration: none;
-                       display: inline-block;
-                       font-weight: bold;
-                   ">
-                   🎥 Open Video in New Tab
-                </a>
-            </div>
-        `;
-        
-        if (video.parentNode && !video.parentNode.querySelector('.mobile-video-error')) {
-            video.parentNode.insertBefore(errorDiv, video.nextSibling);
-        }
-    }
     
     function showVideoStatus(message) {
         let statusDiv = document.querySelector('.video-status');
@@ -795,7 +627,7 @@ function handleVideoError() {
         
         if (isMobile) {
             // Mobile-specific error handling
-            showVideoStatus('Video loading failed on mobile. Try using the Direct Link.');
+            showVideoStatus('Video loading failed on mobile. Please refresh the page.');
         } else {
             // Desktop error handling
             const sources = video.querySelectorAll('source');
@@ -805,7 +637,7 @@ function handleVideoError() {
                 video.load();
                 showVideoStatus('Trying backup video source...');
             } else {
-                showVideoStatus('Click "Direct Link" or "Download" to access the video');
+                showVideoStatus('Video temporarily unavailable - please refresh the page');
             }
         }
     }
