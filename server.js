@@ -5,6 +5,26 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 8080;
 const ROOT = __dirname;
+const MEDIA_BASE = 'https://media.githubusercontent.com/media/averybee24601/Kirk-Dedication/main/';
+
+// Health check
+app.get('/healthz', (_req, res) => res.type('text/plain').send('ok'));
+
+// If a requested video is missing locally (likely due to Git LFS pointers on deploy),
+// redirect to the GitHub media host which serves the real binary.
+app.get(/^\/videos\/(.+\.mp4)$/i, (req, res, next) => {
+  try {
+    const rel = req.params[0];
+    const localPath = path.join(ROOT, 'videos', rel);
+    fs.stat(localPath, (err, st) => {
+      if (!err && st && st.size > 1000) return next(); // let static serve the local file
+      const remote = MEDIA_BASE + rel.split('/').map(encodeURIComponent).join('/');
+      return res.redirect(302, remote);
+    });
+  } catch (e) {
+    return next();
+  }
+});
 
 // Serve static assets (the site)
 app.use(express.static(ROOT, {

@@ -1,0 +1,67 @@
+   0: const express = require('express');
+   1: const path = require('path');
+   2: const fs = require('fs');
+   3: 
+   4: const app = express();
+   5: const PORT = process.env.PORT || 8080;
+   6: const ROOT = __dirname;
+   7: 
+   8: // Serve static assets (the site)
+   9: app.use(express.static(ROOT, {
+  10:   extensions: ['html']
+  11: }));
+  12: 
+  13: // Paths to original (as provided) and a compatibility H.264/AAC encode
+  14: const ORIGINAL_VIDEO_PATH = path.join(ROOT, 'videos', 'msnbc_compilation_final.mp4');
+  15: const H264_VIDEO_PATH = path.join(ROOT, 'videos', 'msnbc_compilation_final_h264.mp4');
+  16: 
+  17: // Robust download endpoint that forces attachment on all browsers
+  18: app.get('/download/video', (req, res) => {
+  19:   try {
+  20:     const variant = (req.query.variant || 'original').toLowerCase();
+  21:     const filePath = variant === 'h264' && fs.existsSync(H264_VIDEO_PATH)
+  22:       ? H264_VIDEO_PATH
+  23:       : ORIGINAL_VIDEO_PATH;
+  24: 
+  25:     if (!fs.existsSync(filePath)) {
+  26:       return res.status(404).send('Video not found');
+  27:     }
+  28: 
+  29:     const downloadName = variant === 'h264'
+  30:       ? 'MSNBC_Should_Lose_License_Evidence_mobile.mp4'
+  31:       : 'MSNBC_Should_Lose_License_Evidence.mp4';
+  32: 
+  33:     // res.download sets Content-Disposition: attachment and streams efficiently
+  34:     res.download(filePath, downloadName, (err) => {
+  35:       if (err && !res.headersSent) {
+  36:         // As a fallback, send the file with explicit headers
+  37:         res.setHeader('Content-Type', 'video/mp4');
+  38:         res.setHeader('Content-Disposition', `attachment; filename="${downloadName}"`);
+  39:         res.sendFile(filePath);
+  40:       }
+  41:     });
+  42:   } catch (e) {
+  43:     console.error('Download error:', e);
+  44:     res.status(500).send('Unable to process download');
+  45:   }
+  46: });
+  47: 
+  48: // Lightweight HEAD endpoint so client code can detect availability without triggering a download
+  49: app.head('/download/video', (req, res) => {
+  50:   try {
+  51:     const variant = (req.query.variant || 'original').toLowerCase();
+  52:     const filePath = variant === 'h264' && fs.existsSync(H264_VIDEO_PATH)
+  53:       ? H264_VIDEO_PATH
+  54:       : ORIGINAL_VIDEO_PATH;
+  55:     if (!fs.existsSync(filePath)) return res.sendStatus(404);
+  56:     res.setHeader('Content-Type', 'video/mp4');
+  57:     res.setHeader('Content-Disposition', 'attachment');
+  58:     return res.sendStatus(200);
+  59:   } catch (e) {
+  60:     return res.sendStatus(500);
+  61:   }
+  62: });
+  63: 
+  64: app.listen(PORT, () => {
+  65:   console.log(`Server running on http://localhost:${PORT}`);
+  66: });

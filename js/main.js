@@ -26,7 +26,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const onRemote = onPages || onRailway;
             if (!onRemote) return;
 
-            const RAW_BASE = 'https://raw.githubusercontent.com/averybee24601/Kirk-Dedication/main/';
+            // Use GitHub's LFS media host so LFS-tracked MP4s resolve to real binaries
+            const MEDIA_BASE = 'https://media.githubusercontent.com/media/averybee24601/Kirk-Dedication/main/';
 
             const fixVideoSources = (videoEl) => {
                 if (!videoEl) return;
@@ -36,15 +37,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 srcEls.forEach(el => {
                     const s = el.getAttribute('src') || '';
                     if (!s) return;
-                    // If already absolute http(s) but pointing to github.com/.../raw, normalize to raw.githubusercontent.com
+                    // If already absolute http(s) but pointing to github.com/.../raw, normalize to media.githubusercontent.com
                     if (/^https?:\/\/github\.com\/averybee24601\/Kirk-Dedication\/raw\//i.test(s)) {
                         const tail = s.replace(/^https?:\/\/github\.com\/averybee24601\/Kirk-Dedication\/raw\//i, '');
-                        el.setAttribute('src', 'https://raw.githubusercontent.com/averybee24601/Kirk-Dedication/' + tail);
+                        el.setAttribute('src', 'https://media.githubusercontent.com/media/averybee24601/Kirk-Dedication/' + tail);
                         return;
                     }
                     // If relative path, rewrite to RAW_BASE
                     if (!/^https?:/i.test(s)) {
-                        el.setAttribute('src', RAW_BASE + s.replace(/^\.\/?/, ''));
+                        el.setAttribute('src', MEDIA_BASE + s.replace(/^\.\/?/, ''));
                     }
                 });
                 try { videoEl.load(); } catch (_) {}
@@ -57,19 +58,19 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update action buttons
             const dl = document.getElementById('download-video');
             if (dl) {
-                dl.href = RAW_BASE + ORIGINAL_URL;
+                dl.href = MEDIA_BASE + ORIGINAL_URL;
                 dl.setAttribute('download', 'MSNBC_Should_Lose_License_Evidence.mp4');
                 dl.removeAttribute('target');
             }
             const direct = document.getElementById('direct-link');
             if (direct) {
-                direct.href = RAW_BASE + ORIGINAL_URL;
+                direct.href = MEDIA_BASE + ORIGINAL_URL;
                 direct.rel = 'noopener';
                 direct.target = '_blank';
             }
 
             // Point any internal consumers at the raw URL too
-            LOCAL_VIDEO_URL = RAW_BASE + ORIGINAL_URL;
+            LOCAL_VIDEO_URL = MEDIA_BASE + ORIGINAL_URL;
         } catch (_) { /* noop */ }
     })();
 
