@@ -55,9 +55,16 @@ app.use(express.static(ROOT, {
   }
 }));
 
+// Current canonical video file (H.264/AAC compatible)
+const CURRENT_VIDEO_FILE = 'msnbc_compilation_final (4).mp4';
+const REMOTE_FALLBACKS = [
+  'videos/msnbc_compilation_final (4).mp4',
+  'videos/msnbc_compilation_final_h264.mp4',
+  'videos/msnbc_compilation_final.mp4'
+];
 // Paths to original (as provided) and a compatibility H.264/AAC encode
-const ORIGINAL_VIDEO_PATH = path.join(ROOT, 'videos', 'msnbc_compilation_final.mp4');
-const H264_VIDEO_PATH = path.join(ROOT, 'videos', 'msnbc_compilation_final_h264.mp4');
+const ORIGINAL_VIDEO_PATH = path.join(ROOT, 'videos', CURRENT_VIDEO_FILE);
+const H264_VIDEO_PATH = ORIGINAL_VIDEO_PATH;
 
 // Robust download endpoint that forces attachment on all browsers
 app.get('/download/video', (req, res) => {
@@ -68,10 +75,18 @@ app.get('/download/video', (req, res) => {
       : ORIGINAL_VIDEO_PATH;
 
     if (!fs.existsSync(filePath)) {
-      // Fallback: redirect to GitHub media host (correct videos/ path)
-      const rel = variant === 'h264' ? 'videos/msnbc_compilation_final_h264.mp4' : 'videos/msnbc_compilation_final.mp4';
-      const remote = MEDIA_BASE + rel.split('/').map(encodeURIComponent).join('/');
-      return res.redirect(302, remote);
+      // Fallback: redirect to available remote candidate
+      (async () => {
+        for (const rel of REMOTE_FALLBACKS) {
+          try {
+            const url = MEDIA_BASE + rel.split('/').map(encodeURIComponent).join('/');
+            const head = await fetch(url, { method: 'HEAD' });
+            if (head.ok) return res.redirect(302, url);
+          } catch (_) {}
+        }
+        return res.status(404).send('Video not found');
+      })();
+      return;
     }
 
     // If the file looks like a Git LFS pointer, redirect to media host as well
@@ -84,9 +99,17 @@ app.get('/download/video', (req, res) => {
         fs.closeSync(fd);
         const isLfs = buf.toString().startsWith('version https://git-lfs.github.com/spec/v1');
         if (isLfs) {
-          const rel = variant === 'h264' ? 'videos/msnbc_compilation_final_h264.mp4' : 'videos/msnbc_compilation_final.mp4';
-          const remote = MEDIA_BASE + rel.split('/').map(encodeURIComponent).join('/');
-          return res.redirect(302, remote);
+          (async () => {
+            for (const rel of REMOTE_FALLBACKS) {
+              try {
+                const url = MEDIA_BASE + rel.split('/').map(encodeURIComponent).join('/');
+                const head = await fetch(url, { method: 'HEAD' });
+                if (head.ok) return res.redirect(302, url);
+              } catch (_) {}
+            }
+            return res.status(404).send('Video not available');
+          })();
+          return;
         }
       }
     } catch (_) {}
@@ -187,7 +210,7 @@ app.get('/stream/video', async (req, res) => {
     if (usedLocal) return;
 
     // Otherwise proxy from GitHub media with inline disposition and Range passthrough
-    const remoteRel = variant === 'h264' ? 'videos/msnbc_compilation_final_h264.mp4' : 'videos/msnbc_compilation_final.mp4';
+    const remoteRel = `videos/${CURRENT_VIDEO_FILE}`;
     const remote = MEDIA_BASE + remoteRel.split('/').map(encodeURIComponent).join('/');
 
     const headers = {};
