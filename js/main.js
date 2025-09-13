@@ -15,6 +15,49 @@ document.addEventListener('DOMContentLoaded', function() {
     const H264_URL = 'videos/msnbc_compilation_final_h264.mp4';
     let LOCAL_VIDEO_URL = ORIGINAL_URL;
 
+    // When hosted on GitHub Pages, MP4s tracked via Git LFS
+    // cannot be served from the same origin (they appear as tiny pointer files),
+    // so point sources and download links at raw.githubusercontent.com instead.
+    (function ensureGithubPagesPlayback(){
+        try {
+            const onPages = /\.github\.io$/i.test(location.hostname);
+            if (!onPages) return;
+
+            const RAW_BASE = 'https://raw.githubusercontent.com/averybee24601/Kirk-Dedication/main/';
+
+            // Update <video class="compilation-video"> sources
+            const comp = document.querySelector('.compilation-video');
+            if (comp) {
+                const srcEls = comp.querySelectorAll('source');
+                srcEls.forEach(el => {
+                    const s = el.getAttribute('src');
+                    if (s && !/^https?:/i.test(s)) {
+                        el.setAttribute('src', RAW_BASE + s.replace(/^\.\/?/, ''));
+                    }
+                });
+                // Reinitialize with updated sources
+                try { comp.load(); } catch (_) {}
+            }
+
+            // Update action buttons
+            const dl = document.getElementById('download-video');
+            if (dl) {
+                dl.href = RAW_BASE + ORIGINAL_URL;
+                dl.setAttribute('download', 'MSNBC_Should_Lose_License_Evidence.mp4');
+                dl.removeAttribute('target');
+            }
+            const direct = document.getElementById('direct-link');
+            if (direct) {
+                direct.href = RAW_BASE + ORIGINAL_URL;
+                direct.rel = 'noopener';
+                direct.target = '_blank';
+            }
+
+            // Point any internal consumers at the raw URL too
+            LOCAL_VIDEO_URL = RAW_BASE + ORIGINAL_URL;
+        } catch (_) { /* noop */ }
+    })();
+
     // Fix Direct Link target
     const directLinkEl = document.getElementById('direct-link');
     if (directLinkEl) {
