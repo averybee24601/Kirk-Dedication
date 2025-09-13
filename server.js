@@ -16,10 +16,25 @@ app.get(/^\/videos\/(.+\.mp4)$/i, (req, res, next) => {
   try {
     const rel = req.params[0];
     const localPath = path.join(ROOT, 'videos', rel);
-    fs.stat(localPath, (err, st) => {
-      if (!err && st && st.size > 1000) return next(); // let static serve the local file
-      const remote = MEDIA_BASE + rel.split('/').map(encodeURIComponent).join('/');
-      return res.redirect(302, remote);
+
+    // Check if file exists and is not a Git LFS pointer
+    fs.readFile(localPath, (err, data) => {
+      if (err) {
+        // File doesn't exist, redirect to GitHub media
+        const remote = MEDIA_BASE + rel.split('/').map(encodeURIComponent).join('/');
+        return res.redirect(302, remote);
+      }
+
+      // Check if this is a Git LFS pointer file (starts with "version https://git-lfs.github.com/spec/v1")
+      const isLfsPointer = data.toString().startsWith('version https://git-lfs.github.com/spec/v1');
+
+      if (isLfsPointer || data.length < 1000000) { // Also redirect if suspiciously small for a video
+        const remote = MEDIA_BASE + rel.split('/').map(encodeURIComponent).join('/');
+        return res.redirect(302, remote);
+      }
+
+      // File exists and appears to be a real video file, serve it normally
+      return next();
     });
   } catch (e) {
     return next();
@@ -28,7 +43,14 @@ app.get(/^\/videos\/(.+\.mp4)$/i, (req, res, next) => {
 
 // Serve static assets (the site)
 app.use(express.static(ROOT, {
-  extensions: ['html']
+  extensions: ['html'],
+  setHeaders: (res, path) => {
+    if (path.endsWith('.mp4')) {
+      // Ensure proper headers for video files
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Content-Type', 'video/mp4');
+    }
+  }
 }));
 
 // Paths to original (as provided) and a compatibility H.264/AAC encode
