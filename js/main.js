@@ -29,6 +29,17 @@ document.addEventListener('DOMContentLoaded', function() {
             // Use GitHub's LFS media host so LFS-tracked MP4s resolve to real binaries
             const MEDIA_BASE = 'https://media.githubusercontent.com/media/averybee24601/Kirk-Dedication/main/';
 
+            const normalizeToMedia = (p) => {
+                if (!p) return p;
+                if (/^https?:\/\/media\.githubusercontent\.com\/media\//i.test(p)) return p;
+                if (/^https?:\/\/github\.com\/averybee24601\/Kirk-Dedication\/raw\//i.test(p)) {
+                    return p.replace(/^https?:\/\/github\.com\/averybee24601\/Kirk-Dedication\/raw\//i,
+                                     'https://media.githubusercontent.com/media/averybee24601/Kirk-Dedication/');
+                }
+                if (!/^https?:/i.test(p)) return MEDIA_BASE + p.replace(/^\.\/?/, '');
+                return p;
+            };
+
             const fixVideoSources = (videoEl) => {
                 if (!videoEl) return;
                 // Cross-origin friendly for raw host
@@ -37,23 +48,60 @@ document.addEventListener('DOMContentLoaded', function() {
                 srcEls.forEach(el => {
                     const s = el.getAttribute('src') || '';
                     if (!s) return;
-                    // If already absolute http(s) but pointing to github.com/.../raw, normalize to media.githubusercontent.com
-                    if (/^https?:\/\/github\.com\/averybee24601\/Kirk-Dedication\/raw\//i.test(s)) {
-                        const tail = s.replace(/^https?:\/\/github\.com\/averybee24601\/Kirk-Dedication\/raw\//i, '');
-                        el.setAttribute('src', 'https://media.githubusercontent.com/media/averybee24601/Kirk-Dedication/' + tail);
-                        return;
-                    }
-                    // If relative path, rewrite to RAW_BASE
-                    if (!/^https?:/i.test(s)) {
-                        el.setAttribute('src', MEDIA_BASE + s.replace(/^\.\/?/, ''));
-                    }
+                    el.setAttribute('src', normalizeToMedia(s));
                 });
                 try { videoEl.load(); } catch (_) {}
             };
 
+            const forceVideoSource = (videoEl, url) => {
+                if (!videoEl) return;
+                // Remove <source> children to avoid incorrect type selection
+                try { Array.from(videoEl.querySelectorAll('source')).forEach(n => n.remove()); } catch(_){}
+                videoEl.removeAttribute('src');
+                videoEl.setAttribute('crossorigin', 'anonymous');
+                videoEl.src = url;
+                try { videoEl.load(); } catch(_){}
+            };
+
+            const tryVideoCandidates = (videoEl, urls, timeoutMs = 8000) => {
+                if (!videoEl || !urls || !urls.length) return;
+                let idx = 0; let timer = null; let resolved = false;
+                const tryOne = () => {
+                    const url = normalizeToMedia(urls[idx]);
+                    forceVideoSource(videoEl, url);
+                    if (timer) clearTimeout(timer);
+                    timer = setTimeout(() => {
+                        if (resolved) return;
+                        idx++;
+                        if (idx < urls.length) tryOne();
+                    }, timeoutMs);
+                };
+                const onMeta = () => { resolved = true; if (timer) clearTimeout(timer); };
+                const onErr = () => { if (resolved) return; idx++; if (idx < urls.length) tryOne(); };
+                videoEl.addEventListener('loadedmetadata', onMeta, { once: true });
+                videoEl.addEventListener('error', onErr);
+                tryOne();
+            };
+
             // Update both the compilation video and the tribute video if present
-            fixVideoSources(document.querySelector('.compilation-video'));
-            fixVideoSources(document.querySelector('.tribute-video'));
+            // Prefer H.264 on hosted environments for maximum compatibility
+            const comp = document.querySelector('.compilation-video');
+            const trib = document.querySelector('.tribute-video');
+            if (comp) {
+                try { comp.preload = 'metadata'; } catch(_){}
+                tryVideoCandidates(comp, [H264_URL, ORIGINAL_URL]);
+            }
+            if (trib) {
+                try { trib.preload = 'metadata'; } catch(_){}
+                // Use direct normalized URL from the first <source>
+                const first = trib.querySelector('source');
+                const tribUrl = first ? first.getAttribute('src') : null;
+                if (tribUrl) {
+                    forceVideoSource(trib, normalizeToMedia(tribUrl));
+                }
+                // Set a poster so the card appears instantly
+                try { trib.setAttribute('poster', 'kirk photo/charlie_kirk_radar_family_photo.jpg'); } catch(_){}
+            }
 
             // Update action buttons
             const dl = document.getElementById('download-video');
