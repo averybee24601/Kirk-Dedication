@@ -289,7 +289,7 @@ section {
     margin-bottom: 30px;
 }
 
-.compilation-video {
+.compilation-video, .tribute-video {
     width: 100%;
     max-width: 900px;
     height: auto;
@@ -324,7 +324,7 @@ section {
 
 /* Mobile-specific video styles */
 @media (max-width: 768px) {
-    .compilation-video {
+    .compilation-video, .tribute-video {
         max-width: 100%;
         border-radius: 10px;
         
