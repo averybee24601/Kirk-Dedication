@@ -104,19 +104,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Internal consumers should also use media host on Pages
                 LOCAL_VIDEO_URL = MEDIA_BASE + ORIGINAL_URL;
             } else if (onRailway) {
-                // On Railway, keep local relative URLs; server handles redirect/streaming
+                // On Railway, Direct Link should STREAM inline using the H.264/AAC proxy
                 const dl = document.getElementById('download-video');
                 if (dl) {
-                    dl.href = '/download/video?variant=original';
+                    // Ensure Download saves the file (attachment) using the H.264 variant
+                    dl.href = '/download/video?variant=h264';
                     dl.removeAttribute('target');
                 }
                 const direct = document.getElementById('direct-link');
                 if (direct) {
-                    direct.href = ORIGINAL_URL; // /videos/... on same host
+                    // Stream inline via server proxy to avoid codec issues
+                    direct.href = '/stream/video?variant=h264';
                     direct.rel = 'noopener';
                     direct.target = '_blank';
                 }
-                LOCAL_VIDEO_URL = ORIGINAL_URL;
+                // Internal links use H.264 asset path for best compatibility
+                LOCAL_VIDEO_URL = H264_URL;
             }
         } catch (_) { /* noop */ }
     })();

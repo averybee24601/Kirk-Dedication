@@ -68,8 +68,28 @@ app.get('/download/video', (req, res) => {
       : ORIGINAL_VIDEO_PATH;
 
     if (!fs.existsSync(filePath)) {
-      return res.status(404).send('Video not found');
+      // Fallback: redirect to GitHub media host (correct videos/ path)
+      const rel = variant === 'h264' ? 'videos/msnbc_compilation_final_h264.mp4' : 'videos/msnbc_compilation_final.mp4';
+      const remote = MEDIA_BASE + rel.split('/').map(encodeURIComponent).join('/');
+      return res.redirect(302, remote);
     }
+
+    // If the file looks like a Git LFS pointer, redirect to media host as well
+    try {
+      const stat = fs.statSync(filePath);
+      if (stat.size < 1000000) {
+        const fd = fs.openSync(filePath, 'r');
+        const buf = Buffer.alloc(Math.min(200, stat.size));
+        fs.readSync(fd, buf, 0, buf.length, 0);
+        fs.closeSync(fd);
+        const isLfs = buf.toString().startsWith('version https://git-lfs.github.com/spec/v1');
+        if (isLfs) {
+          const rel = variant === 'h264' ? 'videos/msnbc_compilation_final_h264.mp4' : 'videos/msnbc_compilation_final.mp4';
+          const remote = MEDIA_BASE + rel.split('/').map(encodeURIComponent).join('/');
+          return res.redirect(302, remote);
+        }
+      }
+    } catch (_) {}
 
     const downloadName = variant === 'h264'
       ? 'MSNBC_Should_Lose_License_Evidence_mobile.mp4'
@@ -108,4 +128,96 @@ app.head('/download/video', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+});
+
+// Inline streaming endpoint that supports Range requests and serves H.264/AAC when available
+app.get('/stream/video', async (req, res) => {
+  try {
+    const variant = (req.query.variant || 'h264').toLowerCase();
+    const filePath = variant === 'h264' ? H264_VIDEO_PATH : ORIGINAL_VIDEO_PATH;
+    const range = req.headers.range;
+
+    const serveLocal = () => {
+      try {
+        const stat = fs.statSync(filePath);
+        const total = stat.size;
+        res.setHeader('Accept-Ranges', 'bytes');
+        res.setHeader('Content-Type', 'video/mp4');
+        res.setHeader('Content-Disposition', 'inline');
+        if (range) {
+          const match = /bytes=(\d+)-(\d+)?/.exec(range);
+          const start = match ? parseInt(match[1], 10) : 0;
+          const end = match && match[2] ? parseInt(match[2], 10) : total - 1;
+          const chunkSize = end - start + 1;
+          res.status(206);
+          res.setHeader('Content-Range', `bytes ${start}-${end}/${total}`);
+          res.setHeader('Content-Length', chunkSize);
+          return fs.createReadStream(filePath, { start, end }).pipe(res);
+        } else {
+          res.setHeader('Content-Length', total);
+          return fs.createReadStream(filePath).pipe(res);
+        }
+      } catch (e) {
+        return false;
+      }
+    };
+
+    // If local file is present and not an LFS pointer (rough check), stream it
+    let usedLocal = false;
+    try {
+      if (fs.existsSync(filePath)) {
+        const stat = fs.statSync(filePath);
+        if (stat.size >= 1000000) {
+          serveLocal();
+          usedLocal = true;
+        } else {
+          const fd = fs.openSync(filePath, 'r');
+          const buf = Buffer.alloc(Math.min(200, stat.size));
+          fs.readSync(fd, buf, 0, buf.length, 0);
+          fs.closeSync(fd);
+          const isLfs = buf.toString().startsWith('version https://git-lfs.github.com/spec/v1');
+          if (!isLfs) {
+            serveLocal();
+            usedLocal = true;
+          }
+        }
+      }
+    } catch (_) {}
+
+    if (usedLocal) return;
+
+    // Otherwise proxy from GitHub media with inline disposition and Range passthrough
+    const remoteRel = variant === 'h264' ? 'videos/msnbc_compilation_final_h264.mp4' : 'videos/msnbc_compilation_final.mp4';
+    const remote = MEDIA_BASE + remoteRel.split('/').map(encodeURIComponent).join('/');
+
+    const headers = {};
+    if (range) headers['Range'] = range;
+
+    const response = await fetch(remote, { headers });
+    if (!response.ok && response.status !== 206) {
+      return res.sendStatus(response.status);
+    }
+
+    // Forward relevant headers but force inline playback
+    res.status(response.status);
+    res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('Content-Type', 'video/mp4');
+    res.setHeader('Content-Disposition', 'inline');
+    const cl = response.headers.get('content-length');
+    const cr = response.headers.get('content-range');
+    if (cl) res.setHeader('Content-Length', cl);
+    if (cr) res.setHeader('Content-Range', cr);
+
+    const { Readable } = require('stream');
+    const body = response.body;
+    if (body && typeof body.pipe === 'function') {
+      body.pipe(res);
+    } else if (body) {
+      Readable.fromWeb(body).pipe(res);
+    } else {
+      res.end();
+    }
+  } catch (e) {
+    res.sendStatus(500);
+  }
 });
