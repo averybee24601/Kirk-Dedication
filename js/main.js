@@ -18,26 +18,41 @@ document.addEventListener('DOMContentLoaded', function() {
     // When hosted on GitHub Pages, MP4s tracked via Git LFS
     // cannot be served from the same origin (they appear as tiny pointer files),
     // so point sources and download links at raw.githubusercontent.com instead.
-    (function ensureGithubPagesPlayback(){
+    (function ensureHostedPlayback(){
         try {
-            const onPages = /\.github\.io$/i.test(location.hostname);
-            if (!onPages) return;
+            const host = location.hostname || '';
+            const onPages = /\.github\.io$/i.test(host);
+            const onRailway = /\.railway\.app$/i.test(host);
+            const onRemote = onPages || onRailway;
+            if (!onRemote) return;
 
             const RAW_BASE = 'https://raw.githubusercontent.com/averybee24601/Kirk-Dedication/main/';
 
-            // Update <video class="compilation-video"> sources
-            const comp = document.querySelector('.compilation-video');
-            if (comp) {
-                const srcEls = comp.querySelectorAll('source');
+            const fixVideoSources = (videoEl) => {
+                if (!videoEl) return;
+                // Cross-origin friendly for raw host
+                try { videoEl.setAttribute('crossorigin', 'anonymous'); } catch(_){}
+                const srcEls = videoEl.querySelectorAll('source');
                 srcEls.forEach(el => {
-                    const s = el.getAttribute('src');
-                    if (s && !/^https?:/i.test(s)) {
+                    const s = el.getAttribute('src') || '';
+                    if (!s) return;
+                    // If already absolute http(s) but pointing to github.com/.../raw, normalize to raw.githubusercontent.com
+                    if (/^https?:\/\/github\.com\/averybee24601\/Kirk-Dedication\/raw\//i.test(s)) {
+                        const tail = s.replace(/^https?:\/\/github\.com\/averybee24601\/Kirk-Dedication\/raw\//i, '');
+                        el.setAttribute('src', 'https://raw.githubusercontent.com/averybee24601/Kirk-Dedication/' + tail);
+                        return;
+                    }
+                    // If relative path, rewrite to RAW_BASE
+                    if (!/^https?:/i.test(s)) {
                         el.setAttribute('src', RAW_BASE + s.replace(/^\.\/?/, ''));
                     }
                 });
-                // Reinitialize with updated sources
-                try { comp.load(); } catch (_) {}
-            }
+                try { videoEl.load(); } catch (_) {}
+            };
+
+            // Update both the compilation video and the tribute video if present
+            fixVideoSources(document.querySelector('.compilation-video'));
+            fixVideoSources(document.querySelector('.tribute-video'));
 
             // Update action buttons
             const dl = document.getElementById('download-video');
