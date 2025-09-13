@@ -55,9 +55,11 @@ app.use(express.static(ROOT, {
   }
 }));
 
+// Current canonical video file (H.264/AAC compatible)
+const CURRENT_VIDEO_FILE = 'MSNBC_COMPILATION_FINAL (4).MP4';
 // Paths to original (as provided) and a compatibility H.264/AAC encode
-const ORIGINAL_VIDEO_PATH = path.join(ROOT, 'videos', 'msnbc_compilation_final.mp4');
-const H264_VIDEO_PATH = path.join(ROOT, 'videos', 'msnbc_compilation_final_h264.mp4');
+const ORIGINAL_VIDEO_PATH = path.join(ROOT, 'videos', CURRENT_VIDEO_FILE);
+const H264_VIDEO_PATH = ORIGINAL_VIDEO_PATH;
 
 // Robust download endpoint that forces attachment on all browsers
 app.get('/download/video', (req, res) => {
@@ -69,7 +71,7 @@ app.get('/download/video', (req, res) => {
 
     if (!fs.existsSync(filePath)) {
       // Fallback: redirect to GitHub media host (correct videos/ path)
-      const rel = variant === 'h264' ? 'videos/msnbc_compilation_final_h264.mp4' : 'videos/msnbc_compilation_final.mp4';
+      const rel = `videos/${CURRENT_VIDEO_FILE}`;
       const remote = MEDIA_BASE + rel.split('/').map(encodeURIComponent).join('/');
       return res.redirect(302, remote);
     }
@@ -84,7 +86,7 @@ app.get('/download/video', (req, res) => {
         fs.closeSync(fd);
         const isLfs = buf.toString().startsWith('version https://git-lfs.github.com/spec/v1');
         if (isLfs) {
-          const rel = variant === 'h264' ? 'videos/msnbc_compilation_final_h264.mp4' : 'videos/msnbc_compilation_final.mp4';
+          const rel = `videos/${CURRENT_VIDEO_FILE}`;
           const remote = MEDIA_BASE + rel.split('/').map(encodeURIComponent).join('/');
           return res.redirect(302, remote);
         }
@@ -187,7 +189,7 @@ app.get('/stream/video', async (req, res) => {
     if (usedLocal) return;
 
     // Otherwise proxy from GitHub media with inline disposition and Range passthrough
-    const remoteRel = variant === 'h264' ? 'videos/msnbc_compilation_final_h264.mp4' : 'videos/msnbc_compilation_final.mp4';
+    const remoteRel = `videos/${CURRENT_VIDEO_FILE}`;
     const remote = MEDIA_BASE + remoteRel.split('/').map(encodeURIComponent).join('/');
 
     const headers = {};

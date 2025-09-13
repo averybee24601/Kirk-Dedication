@@ -11,8 +11,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Video URL used across the site
     // Use URL-encoded path to ensure mobile browsers (iOS Safari) resolve correctly
     // Canonical source is the exact file requested
-    const ORIGINAL_URL = 'videos/msnbc_compilation_final.mp4';
-    const H264_URL = 'videos/msnbc_compilation_final_h264.mp4';
+    const ORIGINAL_URL = 'videos/MSNBC_COMPILATION_FINAL (4).MP4';
+    const H264_URL = ORIGINAL_URL;
     let LOCAL_VIDEO_URL = ORIGINAL_URL;
 
     // When hosted on GitHub Pages, MP4s tracked via Git LFS
@@ -97,6 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 const direct = document.getElementById('direct-link');
                 if (direct) {
+                    // On Pages we can't proxy; open the media host directly for sharing
                     direct.href = MEDIA_BASE + ORIGINAL_URL;
                     direct.rel = 'noopener';
                     direct.target = '_blank';
