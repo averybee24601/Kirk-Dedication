@@ -21,7 +21,8 @@ app.get(/^\/videos\/(.+\.mp4)$/i, (req, res, next) => {
     fs.readFile(localPath, (err, data) => {
       if (err) {
         // File doesn't exist, redirect to GitHub media
-        const remote = MEDIA_BASE + rel.split('/').map(encodeURIComponent).join('/');
+        const remoteRel = path.posix.join('videos', rel.split('\\').join('/'));
+        const remote = MEDIA_BASE + remoteRel.split('/').map(encodeURIComponent).join('/');
         return res.redirect(302, remote);
       }
 
@@ -29,7 +30,8 @@ app.get(/^\/videos\/(.+\.mp4)$/i, (req, res, next) => {
       const isLfsPointer = data.toString().startsWith('version https://git-lfs.github.com/spec/v1');
 
       if (isLfsPointer || data.length < 1000000) { // Also redirect if suspiciously small for a video
-        const remote = MEDIA_BASE + rel.split('/').map(encodeURIComponent).join('/');
+        const remoteRel = path.posix.join('videos', rel.split('\\').join('/'));
+        const remote = MEDIA_BASE + remoteRel.split('/').map(encodeURIComponent).join('/');
         return res.redirect(302, remote);
       }
 

@@ -86,22 +86,38 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // Update action buttons - always use GitHub media for downloads/links
-            const dl = document.getElementById('download-video');
-            if (dl) {
-                dl.href = MEDIA_BASE + ORIGINAL_URL;
-                dl.setAttribute('download', 'MSNBC_Should_Lose_License_Evidence.mp4');
-                dl.removeAttribute('target');
+            // Update action buttons differently per host
+            if (onPages) {
+                // On GitHub Pages, there is no server redirect. Use GitHub media URLs.
+                const dl = document.getElementById('download-video');
+                if (dl) {
+                    dl.href = MEDIA_BASE + ORIGINAL_URL;
+                    dl.setAttribute('download', 'MSNBC_Should_Lose_License_Evidence.mp4');
+                    dl.removeAttribute('target');
+                }
+                const direct = document.getElementById('direct-link');
+                if (direct) {
+                    direct.href = MEDIA_BASE + ORIGINAL_URL;
+                    direct.rel = 'noopener';
+                    direct.target = '_blank';
+                }
+                // Internal consumers should also use media host on Pages
+                LOCAL_VIDEO_URL = MEDIA_BASE + ORIGINAL_URL;
+            } else if (onRailway) {
+                // On Railway, keep local relative URLs; server handles redirect/streaming
+                const dl = document.getElementById('download-video');
+                if (dl) {
+                    dl.href = '/download/video?variant=original';
+                    dl.removeAttribute('target');
+                }
+                const direct = document.getElementById('direct-link');
+                if (direct) {
+                    direct.href = ORIGINAL_URL; // /videos/... on same host
+                    direct.rel = 'noopener';
+                    direct.target = '_blank';
+                }
+                LOCAL_VIDEO_URL = ORIGINAL_URL;
             }
-            const direct = document.getElementById('direct-link');
-            if (direct) {
-                direct.href = MEDIA_BASE + ORIGINAL_URL;
-                direct.rel = 'noopener';
-                direct.target = '_blank';
-            }
-
-            // Point any internal consumers at the raw URL too
-            LOCAL_VIDEO_URL = MEDIA_BASE + ORIGINAL_URL;
         } catch (_) { /* noop */ }
     })();
 
